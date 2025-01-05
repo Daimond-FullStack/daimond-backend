@@ -1,21 +1,24 @@
 const jwt = require('jsonwebtoken');
+
 const { logger } = require('../utils/winston');
+const { errorResponse } = require('../utils/responses');
+const { verifyJWT } = require('../utils/helper');
 
 const authMiddleware = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
-      return res.status(401).json({ message: 'Unauthorized: No token provided' });
+      return errorResponse(res, null, 'Unauthorized', 'Unauthorized: No token provided', 401);
     }
 
-    const decoded = jwt.verify(authHeader, process.env.JWT_SECRET); 
-    req.user = decoded; 
+    const decoded = verifyJWT(authHeader);
+    req.user = decoded;
 
-    next(); 
+    next();
   } catch (error) {
     logger.error('Authentication error:', error);
-    return res.status(401).json({ message: 'Unauthorized: Invalid token' });
+    return errorResponse(res, error, error.stack, 'Unauthorized: Invalid token', 401);
   }
 };
 

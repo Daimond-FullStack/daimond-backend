@@ -1,3 +1,4 @@
+const { errorResponse } = require('../utils/responses');
 const { logger } = require('../utils/winston');
 
 function validateRequest(schema) {
@@ -11,7 +12,7 @@ function validateRequest(schema) {
         if (error) {
             const errorMessages = error.details.map(detail => detail.message);
             logger.error('Request body validation error : ', errorMessages);
-            return res.status(400).json({ errors: errorMessages });
+            return errorResponse(res, { errors: errorMessages }, error.stack, 'Request body validation error.', 400);
         }
 
         next();

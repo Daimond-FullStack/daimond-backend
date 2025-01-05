@@ -27,6 +27,15 @@ const serverConfig = {
     IV: String(process.env.ENCRYPTION_IV),
     ALGORITHM: String(process.env.ENCRYPTION_ALGORITHM),
     RANDOM_BYTES: Number(process.env.RANDOM_BYTES)
+  },
+  NODEMAILER: {
+    HOST: String(process.env.HOST),
+    USER_NAME: String(process.env.USER_NAME),
+    EMAIL: String(process.env.EMAIL),
+    PASSWORD: String(process.env.PASSWORD)
+  },
+  BCRYPT: {
+    SALT: Number(process.env.BCRYPT_SALT)
   }
 };
 

@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
+
 const schema = require('../../models');
-const { logger } = require('../utils/winston');
+const { logger } = require('../../utils/winston');
 
 const handleQueryError = (error, queryName) => {
     logger.error(`Error executing ${queryName} query:`, error);
@@ -61,6 +62,15 @@ const deleteById = async ({ model, id }) => {
     }
 };
 
+const deleteMany = async ({ model, query = {} }) => {
+    try {
+        const result = await schema[model].deleteMany(query);
+        return result;
+    } catch (error) {
+        handleQueryError(error, 'deleteMany');
+    }
+};
+
 const countDocuments = async ({ model, query = {} }) => {
     try {
         const count = await schema[model].countDocuments(query);
@@ -77,5 +87,6 @@ module.exports = {
     create,
     update,
     deleteById,
+    deleteMany,
     countDocuments,
 };

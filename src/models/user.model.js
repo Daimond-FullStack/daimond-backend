@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
     userType: {
         type: String,
         required: true,
-        enum: Object.values(CONSTANT.USER_TYPES)
+        enum: [CONSTANT.USER_TYPES.SALES, CONSTANT.USER_TYPES.FINANCE]
     },
     firstName: {
         type: String,
@@ -18,8 +18,7 @@ const userSchema = new mongoose.Schema({
         trim: true,
     },
     fullName: {
-        type: String,
-        required: true
+        type: String
     },
     email: {
         type: String,
@@ -52,6 +51,18 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: null,
     },
+    loginAt: {
+        type: Date,
+        default: null,
+    },
+    loginIp: {
+        type: Date,
+        default: null,
+    },
+    loginSystemKey: {
+        type: Date,
+        default: null,
+    },
     createdAt: {
         type: Date,
         default: Date.now,
@@ -60,12 +71,10 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
-}, {
-    indexConfigs: [
-        { fields: { email: 1 }, unique: true },
-        { fields: { userType: 1 } },
-    ]
 });
+
+userSchema.index({ email: 1, unique: true });
+userSchema.index({ userType: 1 });
 
 userSchema.pre('save', async function (next) {
     this.fullName = `${this.firstName} ${this.lastName}`;
