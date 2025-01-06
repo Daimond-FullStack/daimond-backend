@@ -58,7 +58,7 @@ const login = async (req, res) => {
         const verifyUser = await findOne({ model: 'User', query: { email: payload.email } });
 
         if (!verifyUser) {
-            return errorResponse(res, null, 'Not Found', 'User not found.', 404);
+            return errorResponse(res, null, 'Not Found', 'No account found, contact your admin.', 404);
         }
 
         if (!verifyUser.isActive) {
@@ -96,7 +96,7 @@ const requestResetPassword = async (req, res) => {
         const verifyUser = await findOne({ model: 'User', query: { email: payload.email } });
 
         if (!verifyUser) {
-            return errorResponse(res, null, 'Not Found', 'User not found.', 404);
+            return errorResponse(res, null, 'Not Found', 'No account found, contact your admin.', 404);
         }
 
         if (!verifyUser.isActive) {
@@ -118,7 +118,7 @@ const requestResetPassword = async (req, res) => {
             }
         });
 
-        const link = `http://localhost:3000/auth/reset-password-form?email=${verifyUser.email}&token=${resetToken}&id=${verifyUser._id}`;
+        const link = `${serverConfig.SERVER.CLIENT}/reset-password-form?email=${verifyUser.email}&token=${resetToken}&id=${verifyUser._id}`;
 
         const emailOptions = {
             link: link,

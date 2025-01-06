@@ -4,7 +4,8 @@ const serverConfig = {
   SERVER: {
     ENVIRONMENT: String(process.env.ENVIRONMENT),
     PORT: Number(process.env.PORT),
-    URL: String(process.env.SERVER_URL)
+    URL: String(process.env.SERVER_URL),
+    CLIENT: String(process.env.CLIENT_URL)
   },
   SSL: {
     KEY: String(process.env.KEY),
