@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
     userType: {
         type: String,
         required: true,
-        enum: [CONSTANT.USER_TYPES.SALES, CONSTANT.USER_TYPES.FINANCE]
+        enum: Object.values(CONSTANT.USER_TYPES)
     },
     firstName: {
         type: String,
@@ -28,6 +28,10 @@ const userSchema = new mongoose.Schema({
         lowercase: true
     },
     password: {
+        type: String,
+        required: true
+    },
+    address: {
         type: String,
         required: true
     },
@@ -56,11 +60,11 @@ const userSchema = new mongoose.Schema({
         default: null,
     },
     loginIp: {
-        type: Date,
+        type: String,
         default: null,
     },
     loginSystemKey: {
-        type: Date,
+        type: String,
         default: null,
     },
     createdAt: {
@@ -79,6 +83,16 @@ userSchema.index({ userType: 1 });
 userSchema.pre('save', async function (next) {
     this.fullName = `${this.firstName} ${this.lastName}`;
     this.updatedAt = Date.now();
+    if (this.role === 'Customer' || this.role === 'Vendor') {
+        this.isActive = undefined;
+        this.activatedAt = undefined;
+        this.deactivatedAt = undefined;
+        this.isDeleted = undefined;
+        this.deletedAt = undefined;
+        this.loginAt = undefined;
+        this.loginIp = undefined;
+        this.loginSystemKey = undefined;
+    }
     next();
 });
 

@@ -3,5 +3,7 @@ module.exports = {
     ADMIN: 'Admin',
     SALES: 'Sales',
     FINANCE: 'Finance',
+    CUSTOMER: 'Customer',
+    VENDOR: 'Vendor'
   }
 };

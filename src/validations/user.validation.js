@@ -14,7 +14,9 @@ const updateStatusSchema = Joi.object({
 
 const loginSchema = Joi.object({
   email: Joi.string().email().required(),
-  password: Joi.string().required()
+  password: Joi.string().required(),
+  loginIp: Joi.string().required(),
+  loginSystemKey: Joi.string().required()
 });
 
 const requestResetPasswordSchema = Joi.object({

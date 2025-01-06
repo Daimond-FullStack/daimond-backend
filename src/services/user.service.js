@@ -71,6 +71,8 @@ const login = async (req, res) => {
 
         let updateObj = {};
         updateObj.loginAt = new Date();
+        updateObj.loginSystemKey = payload.loginSystemKey;
+        updateObj.loginIp = payload.loginIp;
 
         const updateUser = await update({ model: 'User', query: { _id: verifyUser._id }, updateData: { $set: updateObj } });
 
