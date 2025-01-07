@@ -1,7 +1,8 @@
 const Joi = require('joi');
+const { ROLES_AND_PERMISSION } = require('../utils/constant');
 
 const registrationSchema = Joi.object({
-  userType: Joi.string().required(),
+  userType: Joi.string().valid(...Object.values(ROLES_AND_PERMISSION)).required(),
   firstName: Joi.string().required(),
   lastName: Joi.string().required(),
   email: Joi.string().email().required(),
