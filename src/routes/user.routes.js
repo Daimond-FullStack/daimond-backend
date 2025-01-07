@@ -8,7 +8,7 @@ const CONSTANT = require('../utils/constant');
 const allowedRoles = require('../middleware/role.middleware');
 const validateRequest = require('../middleware/validate.middleware');
 
-const { registrationSchema, updateStatusSchema, loginSchema, requestResetPasswordSchema, resetPasswordSchema, deleteUserSchema } = require('../validations/user.validation');
+const { registrationSchema, updateStatusSchema, loginSchema, requestResetPasswordSchema, resetPasswordSchema, deleteUserSchema, allUserSchema } = require('../validations/user.validation');
 const authMiddleware = require('../middleware/auth.middleware');
 
 // Registration route
@@ -57,6 +57,15 @@ router.post(
     validateRequest(deleteUserSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     userController.deleteUser
+);
+
+// All User List route
+router.post(
+    '/all-user',
+    authMiddleware,
+    validateRequest(allUserSchema),
+    allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
+    userController.allUser
 );
 
 module.exports = router;

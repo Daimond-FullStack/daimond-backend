@@ -34,11 +34,20 @@ const deleteUserSchema = Joi.object({
   userId: Joi.string().required()
 });
 
+const allUserSchema = Joi.object({
+  search: Joi.string().allow(''),
+  sortingKey: Joi.string().allow(''),
+  sortingOrder: Joi.string().allow(''),
+  page: Joi.number().default(1),
+  limit: Joi.number().default(10)
+});
+
 module.exports = {
   registrationSchema,
   updateStatusSchema,
   loginSchema,
   requestResetPasswordSchema,
   resetPasswordSchema,
-  deleteUserSchema
+  deleteUserSchema,
+  allUserSchema
 };

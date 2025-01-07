@@ -74,11 +74,24 @@ const deleteUser = async (req, res) => {
     }
 };
 
+const allUser = async (req, res) => {
+    try {
+        const user = await userService.all(req, res);
+
+        if (!user) return;
+
+        return successResponse(res, user, 'User fetched successfully.', 200);
+    } catch (error) {
+        return errorResponse(res, error, error.stack, 'Internal server error.', 500);
+    }
+};
+
 module.exports = {
     registerUser,
     updateUserStatus,
     loginUser,
     requestResetUserPassword,
     resetUserPassword,
-    deleteUser
+    deleteUser,
+    allUser
 };

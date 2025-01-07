@@ -1,5 +1,6 @@
 const serverConfig = require("../config");
-const { findOne, create, update, deleteMany, find } = require("../utils/database");
+const { ROLES_AND_PERMISSION } = require("../utils/constant");
+const { findOne, create, update, deleteMany, find, countDocuments } = require("../utils/database");
 const { sendEmail } = require("../utils/email");
 const { hashValue, generateJWT, compareHashValue, generateRandomToken } = require("../utils/helper");
 const { errorResponse } = require("../utils/responses");
@@ -211,11 +212,45 @@ const deletation = async (req, res) => {
     }
 };
 
+const all = async (req, res) => {
+    try {
+        const payload = req.body;
+
+        payload.page = payload.page ?? 1
+        payload.limit = payload.limit ?? 10
+
+        const skip = (payload.page - 1) * payload.limit;
+
+        const userCount = countDocuments({ model: 'User', query: { userType: { $in: Object.values(ROLES_AND_PERMISSION), isDeleted: false } } });
+        const users = findOne({
+            model: 'User',
+            query: { userType: { $in: Object.values(ROLES_AND_PERMISSION), isDeleted: false } },
+            options: { skip, limit: payload.limit, sort: { [payload.sortingKey]: payload.sortingOrder == 'Asc' ? 1 : -1 } }
+        });
+
+        const userResponse = await Promise.allSettled([userCount, users]);
+
+        const response = {
+            totalDocs: userResponse[0].value,
+            totalPages: Math.ceil(userResponse[0].value / payload.limit),
+            currentPage: payload.page,
+            limit: payload.limit,
+            docs: userResponse[1].value
+        };
+
+        return response;
+    } catch (error) {
+        return errorResponse(res, error, error.stack, 'Internal server error.', 500);
+    }
+};
+
+
 module.exports = {
     register,
     updateStatus,
     login,
     requestResetPassword,
     resetPassword,
-    deletation
+    deletation,
+    all
 };
