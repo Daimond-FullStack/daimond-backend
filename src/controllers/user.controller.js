@@ -6,7 +6,7 @@ const registerUser = async (req, res) => {
     try {
         const user = await userService.register(req);
 
-        if(!user) return;
+        if (!user) return;
 
         return successResponse(res, user, 'User registered successfully.', 201);
     } catch (error) {
@@ -18,7 +18,7 @@ const updateUserStatus = async (req, res) => {
     try {
         const user = await userService.updateStatus(req);
 
-        if(!user) return;
+        if (!user) return;
 
         return successResponse(res, user, 'User status updated successfully.', 200);
     } catch (error) {
@@ -30,8 +30,8 @@ const loginUser = async (req, res) => {
     try {
         const user = await userService.login(req, res);
 
-        if(!user) return;
-        
+        if (!user) return;
+
         return successResponse(res, user, 'User login successfully.', 200);
     } catch (error) {
         return errorResponse(res, error, error.stack, 'Internal server error.', 500);
@@ -42,8 +42,8 @@ const requestResetUserPassword = async (req, res) => {
     try {
         const user = await userService.requestResetPassword(req, res);
 
-        if(!user) return;
-        
+        if (!user) return;
+
         return successResponse(res, user, 'Email has been sent successfully.', 200);
     } catch (error) {
         return errorResponse(res, error, error.stack, 'Internal server error.', 500);
@@ -54,9 +54,21 @@ const resetUserPassword = async (req, res) => {
     try {
         const user = await userService.resetPassword(req, res);
 
-        if(!user) return;
-        
+        if (!user) return;
+
         return successResponse(res, user, 'Password Reset Successful.', 200);
+    } catch (error) {
+        return errorResponse(res, error, error.stack, 'Internal server error.', 500);
+    }
+};
+
+const deleteUser = async (req, res) => {
+    try {
+        const user = await userService.deletation(req, res);
+
+        if (!user) return;
+
+        return successResponse(res, user, 'User deleted successfully.', 200);
     } catch (error) {
         return errorResponse(res, error, error.stack, 'Internal server error.', 500);
     }
@@ -67,5 +79,6 @@ module.exports = {
     updateUserStatus,
     loginUser,
     requestResetUserPassword,
-    resetUserPassword
+    resetUserPassword,
+    deleteUser
 };

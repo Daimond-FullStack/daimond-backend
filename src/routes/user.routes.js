@@ -8,7 +8,7 @@ const CONSTANT = require('../utils/constant');
 const allowedRoles = require('../middleware/role.middleware');
 const validateRequest = require('../middleware/validate.middleware');
 
-const { registrationSchema, updateStatusSchema, loginSchema, requestResetPasswordSchema, resetPasswordSchema } = require('../validations/user.validation');
+const { registrationSchema, updateStatusSchema, loginSchema, requestResetPasswordSchema, resetPasswordSchema, deleteUserSchema } = require('../validations/user.validation');
 const authMiddleware = require('../middleware/auth.middleware');
 
 // Registration route
@@ -48,6 +48,15 @@ router.post(
     '/reset-password',
     validateRequest(resetPasswordSchema),
     userController.resetUserPassword
+);
+
+// User Delete route
+router.post(
+    '/delete',
+    authMiddleware,
+    validateRequest(deleteUserSchema),
+    allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
+    userController.deleteUser
 );
 
 module.exports = router;

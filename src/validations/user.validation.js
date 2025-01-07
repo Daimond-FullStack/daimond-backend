@@ -30,10 +30,15 @@ const resetPasswordSchema = Joi.object({
   confirmPassword: Joi.string().required(),
 });
 
+const deleteUserSchema = Joi.object({
+  userId: Joi.string().required()
+});
+
 module.exports = {
   registrationSchema,
   updateStatusSchema,
   loginSchema,
   requestResetPasswordSchema,
-  resetPasswordSchema
+  resetPasswordSchema,
+  deleteUserSchema
 };

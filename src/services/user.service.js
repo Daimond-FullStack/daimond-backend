@@ -8,7 +8,7 @@ const register = async (req, res) => {
     try {
         const payload = req.body;
 
-        const verifyUser = await findOne({ model: 'User', query: { email: payload.email } });
+        const verifyUser = await findOne({ model: 'User', query: { email: payload.email, isDeleted: false } });
 
         if (verifyUser) {
             return errorResponse(res, null, 'Already Exist', 'User already exists.', 400);
@@ -28,10 +28,10 @@ const updateStatus = async (req, res) => {
     try {
         const payload = req.body;
 
-        const verifyUser = await findOne({ model: 'User', query: { _id: payload.userId } });
+        const verifyUser = await findOne({ model: 'User', query: { _id: payload.userId, isDeleted: false } });
 
         if (!verifyUser) {
-            return errorResponse(res, null, 'Not Found', 'User not found.', 404);
+            return errorResponse(res, null, 'Not Found', 'No account found, contact your admin.', 404);
         }
 
         let updateObj = {};
@@ -55,7 +55,7 @@ const login = async (req, res) => {
     try {
         const payload = req.body;
 
-        const verifyUser = await findOne({ model: 'User', query: { email: payload.email } });
+        const verifyUser = await findOne({ model: 'User', query: { email: payload.email, isDeleted: false } });
 
         if (!verifyUser) {
             return errorResponse(res, null, 'Not Found', 'No account found, contact your admin.', 404);
@@ -95,7 +95,7 @@ const requestResetPassword = async (req, res) => {
     try {
         const payload = req.body;
 
-        const verifyUser = await findOne({ model: 'User', query: { email: payload.email } });
+        const verifyUser = await findOne({ model: 'User', query: { email: payload.email, isDeleted: false } });
 
         if (!verifyUser) {
             return errorResponse(res, null, 'Not Found', 'No account found, contact your admin.', 404);
@@ -146,7 +146,7 @@ const resetPassword = async (req, res) => {
     try {
         const payload = req.body;
 
-        const verifyToken = await findOne({ model: 'User', query: { userId: payload.userId } });
+        const verifyToken = await findOne({ model: 'Token', query: { userId: payload.userId } });
 
         if (!verifyToken) {
             return errorResponse(res, null, 'Link Expired', 'It appears that this link to reset your password has expired. Please tap on Forgot Password in the app again to proceed.', 404);
@@ -158,10 +158,10 @@ const resetPassword = async (req, res) => {
             return errorResponse(res, null, 'Invalid Token', 'We are unable to process your password reset request at this moment. Please tap on Forgot Password in the app again to proceed.', 400);
         }
 
-        const verifyUser = await findOne({ model: 'User', query: { _id: payload.userId } });
+        const verifyUser = await findOne({ model: 'User', query: { _id: payload.userId, isDeleted: false } });
 
         if (!verifyUser) {
-            return errorResponse(res, null, 'Not Found', 'User not found.', 404);
+            return errorResponse(res, null, 'Not Found', 'No account found, contact your admin.', 404);
         }
 
         if (!verifyUser.isActive) {
@@ -189,10 +189,33 @@ const resetPassword = async (req, res) => {
     }
 };
 
+const deletation = async (req, res) => {
+    try {
+        const payload = req.body;
+
+        const verifyUser = await findOne({ model: 'User', query: { _id: payload.userId, isDeleted: false } });
+
+        if (!verifyUser) {
+            return errorResponse(res, null, 'Not Found', 'No account found, contact your admin.', 404);
+        }
+
+        let updateObj = {};
+        updateObj.isDeleted = true;
+        updateObj.deletedAt = new Date();
+
+        const updateUser = await update({ model: 'User', query: { _id: payload.userId }, updateData: { $set: updateObj } });
+
+        return updateUser;
+    } catch (error) {
+        return errorResponse(res, error, error.stack, 'Internal server error.', 500);
+    }
+};
+
 module.exports = {
     register,
     updateStatus,
     login,
     requestResetPassword,
-    resetPassword
+    resetPassword,
+    deletation
 };
