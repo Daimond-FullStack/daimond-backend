@@ -1,9 +1,34 @@
 const serverConfig = require("../config");
+const { deleteLocalFile } = require("../middleware/multer.middleware");
 const { ROLES_AND_PERMISSION } = require("../utils/constant");
 const { findOne, create, update, deleteMany, find, countDocuments } = require("../utils/database");
 const { sendEmail } = require("../utils/email");
 const { hashValue, generateJWT, compareHashValue, generateRandomToken } = require("../utils/helper");
 const { errorResponse } = require("../utils/responses");
+
+const upload = async (req, res) => {
+    try {
+        const file = req.file;
+
+        const filePath = (file?.destination + '/' + file?.filename).replace('.', '');
+
+        return filePath;
+    } catch (error) {
+        return errorResponse(res, error, error.stack, 'Internal server error.', 500);
+    }
+};
+
+const remove = async (req, res) => {
+    try {
+        const payload = req.body;
+
+        const deleteProfile = await deleteLocalFile(payload.url);
+
+        return deleteProfile;
+    } catch (error) {
+        return errorResponse(res, error, error.stack, 'Internal server error.', 500);
+    }
+};
 
 const register = async (req, res) => {
     try {
@@ -221,11 +246,37 @@ const all = async (req, res) => {
 
         const skip = (payload.page - 1) * payload.limit;
 
-        const userCount = countDocuments({ model: 'User', query: { userType: { $in: Object.values(ROLES_AND_PERMISSION), isDeleted: false } } });
-        const users = findOne({
+        const userCount = countDocuments({
             model: 'User',
-            query: { userType: { $in: Object.values(ROLES_AND_PERMISSION), isDeleted: false } },
-            options: { skip, limit: payload.limit, sort: { [payload.sortingKey]: payload.sortingOrder == 'Asc' ? 1 : -1 } }
+            query: {
+                userType: { $in: Object.values(ROLES_AND_PERMISSION) },
+                isDeleted: false,
+                $or: [
+                    { firstName: { $regex: payload.search, $options: 'i' } },
+                    { lastName: { $regex: payload.search, $options: 'i' } },
+                    { email: { $regex: payload.search, $options: 'i' } }
+                ]
+            }
+        });
+
+        const users = find({
+            model: 'User',
+            query: {
+                userType: { $in: Object.values(ROLES_AND_PERMISSION) },
+                isDeleted: false,
+                $or: [
+                    { firstName: { $regex: payload.search, $options: 'i' } },
+                    { lastName: { $regex: payload.search, $options: 'i' } },
+                    { email: { $regex: payload.search, $options: 'i' } }
+                ]
+            },
+            options: {
+                skip,
+                limit: payload.limit,
+                sort: {
+                    [payload.sortingKey]: payload.sortingOrder == 'Asc' ? 1 : -1
+                }
+            }
         });
 
         const userResponse = await Promise.allSettled([userCount, users]);
@@ -244,8 +295,9 @@ const all = async (req, res) => {
     }
 };
 
-
 module.exports = {
+    upload,
+    remove,
     register,
     updateStatus,
     login,

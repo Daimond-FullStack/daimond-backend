@@ -37,6 +37,9 @@ const serverConfig = {
   },
   BCRYPT: {
     SALT: Number(process.env.BCRYPT_SALT)
+  },
+  MULTER: {
+    PATH: String(process.env.MULTER_PATH)
   }
 };
 

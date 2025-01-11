@@ -1,12 +1,18 @@
 const Joi = require('joi');
 const { ROLES_AND_PERMISSION } = require('../utils/constant');
 
+const removeImageSchema = Joi.object({
+  url: Joi.string().required()
+});
+
 const registrationSchema = Joi.object({
   userType: Joi.string().valid(...Object.values(ROLES_AND_PERMISSION)).required(),
+  profilePic: Joi.string().allow(''),
   firstName: Joi.string().required(),
   lastName: Joi.string().required(),
+  phone: Joi.string().required(),
   email: Joi.string().email().required(),
-  password: Joi.string().min(8).required()
+  password: Joi.string().required()
 });
 
 const updateStatusSchema = Joi.object({
@@ -44,6 +50,7 @@ const allUserSchema = Joi.object({
 });
 
 module.exports = {
+  removeImageSchema,
   registrationSchema,
   updateStatusSchema,
   loginSchema,

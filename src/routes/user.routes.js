@@ -8,8 +8,27 @@ const CONSTANT = require('../utils/constant');
 const allowedRoles = require('../middleware/role.middleware');
 const validateRequest = require('../middleware/validate.middleware');
 
-const { registrationSchema, updateStatusSchema, loginSchema, requestResetPasswordSchema, resetPasswordSchema, deleteUserSchema, allUserSchema } = require('../validations/user.validation');
+const { removeImageSchema, registrationSchema, updateStatusSchema, loginSchema, requestResetPasswordSchema, resetPasswordSchema, deleteUserSchema, allUserSchema } = require('../validations/user.validation');
 const authMiddleware = require('../middleware/auth.middleware');
+const { upload } = require('../middleware/multer.middleware');
+
+// Upload Image route
+router.post(
+    '/upload-image',
+    authMiddleware,
+    allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
+    upload.single('ProfilePic'),
+    userController.uploadProfilePic
+);
+
+// Remove Image route
+router.post(
+    '/remove-image',
+    authMiddleware,
+    validateRequest(removeImageSchema),
+    allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
+    userController.removeProfilePic
+);
 
 // Registration route
 router.post(

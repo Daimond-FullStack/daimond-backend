@@ -31,7 +31,7 @@ exports.verifyJWT = (token) => {
         const decoded = jwt.verify(token, secret);
         return decoded;
     } catch (error) {
-        return null;
+        return error;   
     }
 }
 

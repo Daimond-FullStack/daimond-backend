@@ -2,6 +2,30 @@ const userService = require('../services/user.service');
 
 const { successResponse, errorResponse } = require('../utils/responses');
 
+const uploadProfilePic = async (req, res) => {
+    try {
+        const user = await userService.upload(req);
+
+        if (!user) return;
+
+        return successResponse(res, user, 'User profile uploaded successfully.', 201);
+    } catch (error) {
+        return errorResponse(res, error, error.stack, 'Internal server error.', 500);
+    }
+};
+
+const removeProfilePic = async (req, res) => {
+    try {
+        const user = await userService.remove(req);
+
+        if (!user) return;
+
+        return successResponse(res, user, 'User profile removed successfully.', 201);
+    } catch (error) {
+        return errorResponse(res, error, error.stack, 'Internal server error.', 500);
+    }
+};
+
 const registerUser = async (req, res) => {
     try {
         const user = await userService.register(req);
@@ -87,6 +111,8 @@ const allUser = async (req, res) => {
 };
 
 module.exports = {
+    uploadProfilePic,
+    removeProfilePic,
     registerUser,
     updateUserStatus,
     loginUser,

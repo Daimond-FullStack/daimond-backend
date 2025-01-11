@@ -1,5 +1,3 @@
-const jwt = require('jsonwebtoken');
-
 const { logger } = require('../utils/winston');
 const { errorResponse } = require('../utils/responses');
 const { verifyJWT } = require('../utils/helper');
@@ -13,6 +11,11 @@ const authMiddleware = (req, res, next) => {
     }
 
     const decoded = verifyJWT(authHeader);
+
+    if (decoded && decoded.message) {
+      return errorResponse(res, null, 'Token Expired', 'Unauthorized: Token has expired. Please login again.', 401);
+    }
+
     req.user = decoded;
 
     next();

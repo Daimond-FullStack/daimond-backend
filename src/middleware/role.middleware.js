@@ -3,9 +3,9 @@ const { errorResponse } = require('../utils/responses');
 
 const allowedRoles = (roles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      logger.warn(`Unauthorized access: User with role ${req.user.role} attempted to access ${req.originalUrl}`);
-      return errorResponse(res, null, error.stack, 'Forbidden', 403);
+    if (!roles.includes(req.user.userType)) {
+      logger.warn(`Unauthorized access: User with role ${req.user.userType} attempted to access ${req.originalUrl}`);
+      return errorResponse(res, null, 'Forbidden', 'Forbidden: You do not have permission to access this resource.', 403);
     }
     next();
   };

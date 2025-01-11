@@ -7,15 +7,19 @@ const userSchema = new mongoose.Schema({
         required: true,
         enum: Object.values(CONSTANT.USER_TYPES)
     },
+    profilePic: {
+        type: String,
+        default: ''
+    },
     firstName: {
         type: String,
         required: true,
-        trim: true,
+        trim: true
     },
     lastName: {
         type: String,
         required: true,
-        trim: true,
+        trim: true
     },
     fullName: {
         type: String
@@ -32,48 +36,47 @@ const userSchema = new mongoose.Schema({
         required: true
     },
     address: {
-        type: String,
-        required: true
+        type: String
     },
     isActive: {
         type: Boolean,
-        default: false,
+        default: false
     },
     activatedAt: {
         type: Date,
-        default: null,
+        default: null
     },
     deactivatedAt: {
         type: Date,
-        default: null,
+        default: null
     },
     isDeleted: {
         type: Boolean,
-        default: false,
+        default: false
     },
     deletedAt: {
         type: Date,
-        default: null,
+        default: null
     },
     loginAt: {
         type: Date,
-        default: null,
+        default: null
     },
     loginIp: {
         type: String,
-        default: null,
+        default: null
     },
     loginSystemKey: {
         type: String,
-        default: null,
+        default: null
     },
     createdAt: {
         type: Date,
-        default: Date.now,
+        default: Date.now
     },
     updatedAt: {
         type: Date,
-        default: Date.now,
+        default: Date.now
     },
 });
 
@@ -84,10 +87,10 @@ userSchema.pre('save', async function (next) {
     this.fullName = `${this.firstName} ${this.lastName}`;
     this.updatedAt = Date.now();
     if (this.role === 'Customer' || this.role === 'Vendor') {
-        this.isActive = undefined;
+        this.isActive = false;
         this.activatedAt = undefined;
         this.deactivatedAt = undefined;
-        this.isDeleted = undefined;
+        this.isDeleted = false;
         this.deletedAt = undefined;
         this.loginAt = undefined;
         this.loginIp = undefined;
