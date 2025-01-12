@@ -28,7 +28,7 @@ const removeProfilePic = async (req, res) => {
 
 const registerUser = async (req, res) => {
     try {
-        const user = await userService.register(req);
+        const user = await userService.register(req, res);
 
         if (!user) return;
 
