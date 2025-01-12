@@ -146,7 +146,7 @@ const requestResetPassword = async (req, res) => {
             }
         });
 
-        const link = `${serverConfig.SERVER.CLIENT}/reset-password-form?email=${verifyUser.email}&token=${resetToken}&id=${verifyUser._id}`;
+        const link = `${serverConfig.SERVER.CLIENT}/reset-password?email=${verifyUser.email}&token=${resetToken}&id=${verifyUser._id}`;
 
         const emailOptions = {
             link: link,
