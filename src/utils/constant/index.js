@@ -9,5 +9,9 @@ module.exports = {
   ROLES_AND_PERMISSION: {
     SALES: 'Sales',
     FINANCE: 'Finance'
+  },
+  CUSTOMER: {
+    CUSTOMER: 'Customer',
+    VENDOR: 'Vendor'
   }
 };

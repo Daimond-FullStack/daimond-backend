@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
     userType: {
         type: String,
         required: true,
-        enum: Object.values(CONSTANT.USER_TYPES)
+        enum: Object.values(CONSTANT.ROLES_AND_PERMISSION)
     },
     profilePic: {
         type: String,
@@ -27,16 +27,12 @@ const userSchema = new mongoose.Schema({
     email: {
         type: String,
         required: true,
-        unique: true,
         trim: true,
         lowercase: true
     },
     password: {
         type: String,
         required: true
-    },
-    address: {
-        type: String
     },
     isActive: {
         type: Boolean,
@@ -80,7 +76,7 @@ const userSchema = new mongoose.Schema({
     },
 });
 
-userSchema.index({ email: 1, unique: true });
+userSchema.index({ email: 1 });
 userSchema.index({ userType: 1 });
 
 userSchema.pre('save', async function (next) {
