@@ -7,10 +7,10 @@ const CONSTANT = require('../utils/constant');
 
 const allowedRoles = require('../middleware/role.middleware');
 const validateRequest = require('../middleware/validate.middleware');
-
-const { removeImageSchema, registrationSchema, updateStatusSchema, loginSchema, requestResetPasswordSchema, resetPasswordSchema, deleteUserSchema, allUserSchema } = require('../validations/user.validation');
 const authMiddleware = require('../middleware/auth.middleware');
 const { upload } = require('../middleware/multer.middleware');
+
+const { removeImageSchema, registrationSchema, updateStatusSchema, loginSchema, requestResetPasswordSchema, resetPasswordSchema, deleteUserSchema, allUserSchema } = require('../validations/user.validation');
 
 // Upload Image route
 router.post(

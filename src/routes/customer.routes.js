@@ -7,9 +7,9 @@ const CONSTANT = require('../utils/constant');
 
 const allowedRoles = require('../middleware/role.middleware');
 const validateRequest = require('../middleware/validate.middleware');
+const authMiddleware = require('../middleware/auth.middleware');
 
 const { addCustomerSchema, deleteCustomerSchema, allCustomerSchema } = require('../validations/customer.validation');
-const authMiddleware = require('../middleware/auth.middleware');
 
 // Customer/Vendor registration route
 router.post(
