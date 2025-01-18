@@ -36,16 +36,8 @@ const customerSchema = new mongoose.Schema({
     deletedAt: {
         type: Date,
         default: null
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    },
-    updatedAt: {
-        type: Date,
-        default: Date.now
     }
-});
+}, { timestamps: true });
 
 customerSchema.index({ email: 1 });
 customerSchema.index({ userType: 1 });

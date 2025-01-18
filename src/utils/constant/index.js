@@ -13,5 +13,10 @@ module.exports = {
   CUSTOMER: {
     CUSTOMER: 'Customer',
     VENDOR: 'Vendor'
+  },
+  STOCK_STATUS: {
+    AVAILABLE: 'Available',
+    ON_MEMO: 'On Memo',
+    SOLD: 'Sold'
   }
 };

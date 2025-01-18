@@ -4,7 +4,7 @@ const { successResponse, errorResponse } = require('../utils/responses');
 
 const uploadProfilePic = async (req, res) => {
     try {
-        const user = await userService.upload(req);
+        const user = await userService.upload(req, res);
 
         if (!user) return;
 
@@ -16,7 +16,7 @@ const uploadProfilePic = async (req, res) => {
 
 const removeProfilePic = async (req, res) => {
     try {
-        const user = await userService.remove(req);
+        const user = await userService.remove(req, res);
 
         if (!user) return;
 
@@ -40,7 +40,7 @@ const registerUser = async (req, res) => {
 
 const updateUserStatus = async (req, res) => {
     try {
-        const user = await userService.updateStatus(req);
+        const user = await userService.updateStatus(req, res);
 
         if (!user) return;
 

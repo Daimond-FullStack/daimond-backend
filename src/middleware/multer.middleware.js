@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 
 const serverConfig = require('../config');
+const { logger } = require('../utils/winston');
 
 // Helper function to ensure a directory exists
 const ensureDirectoryExists = (directory) => {
@@ -110,7 +111,9 @@ const deleteLocalFile = async (fileUrl) => {
   try {
     // Extract the relative path from the URL
     const filePath = fileUrl.replace(/\\/g, '/').split('public/')[1];
-    const normalizedPath = path.join(__dirname, 'public', filePath);
+    const normalizedPath = path.join(process.cwd(), 'public', filePath);
+    console.log(normalizedPath);
+    
 
     if (fs.existsSync(normalizedPath)) {
       fs.unlinkSync(normalizedPath);

@@ -4,7 +4,7 @@ const { successResponse, errorResponse } = require('../utils/responses');
 
 const registerCustomer = async (req, res) => {
     try {
-        const customer = await customerService.register(req);
+        const customer = await customerService.register(req, res);
 
         if (!customer) return;
 

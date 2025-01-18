@@ -65,16 +65,8 @@ const userSchema = new mongoose.Schema({
     loginSystemKey: {
         type: String,
         default: null
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    },
-    updatedAt: {
-        type: Date,
-        default: Date.now
-    },
-});
+    }
+}, { timestamps: true });
 
 userSchema.index({ email: 1 });
 userSchema.index({ userType: 1 });

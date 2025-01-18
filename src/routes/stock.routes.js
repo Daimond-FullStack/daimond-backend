@@ -8,8 +8,9 @@ const CONSTANT = require('../utils/constant');
 const allowedRoles = require('../middleware/role.middleware');
 const validateRequest = require('../middleware/validate.middleware');
 const authMiddleware = require('../middleware/auth.middleware');
+const { upload } = require('../middleware/multer.middleware');
 
-const { } = require('../validations/stock.validation');
+const { removeImageSchema, addNewStockSchema, stockDetailSchema, allStocksSchema } = require('../validations/stock.validation');
 
 // All Vendor List route
 router.get(
@@ -17,6 +18,60 @@ router.get(
     authMiddleware,
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     stockController.allVendorsList
+);
+
+// Upload Image route
+router.post(
+    '/upload-image',
+    authMiddleware,
+    allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
+    upload.array('DaimondPic', 10),
+    stockController.uploadDaimondImages
+);
+
+// Remove Image route
+router.post(
+    '/remove-image',
+    authMiddleware,
+    validateRequest(removeImageSchema),
+    allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
+    stockController.removeDaimondImages
+);
+
+// Stock creation route
+router.post(
+    '/add-new',
+    authMiddleware,
+    validateRequest(addNewStockSchema),
+    allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
+    stockController.addNewStock
+);
+
+// Stock detail route
+router.post(
+    '/detail',
+    authMiddleware,
+    validateRequest(stockDetailSchema),
+    allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
+    stockController.stockDetail
+);
+
+// Stock delete route
+router.post(
+    '/delete',
+    authMiddleware,
+    validateRequest(stockDetailSchema),
+    allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
+    stockController.stockDelete
+);
+
+// All stock items list route
+router.post(
+    '/all-stocks',
+    authMiddleware,
+    validateRequest(allStocksSchema),
+    allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
+    stockController.allStocks
 );
 
 module.exports = router;
