@@ -10,7 +10,7 @@ const validateRequest = require('../middleware/validate.middleware');
 const authMiddleware = require('../middleware/auth.middleware');
 const { upload } = require('../middleware/multer.middleware');
 
-const { removeImageSchema, addNewStockSchema, stockDetailSchema, allStocksSchema } = require('../validations/stock.validation');
+const { removeImageSchema, addNewStockSchema, stockDetailSchema, updateStockDetailSchema, allStocksSchema } = require('../validations/stock.validation');
 
 // All Vendor List route
 router.get(
@@ -63,6 +63,15 @@ router.post(
     validateRequest(stockDetailSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     stockController.stockDelete
+);
+
+// Stock update route
+router.post(
+    '/update',
+    authMiddleware,
+    validateRequest(updateStockDetailSchema),
+    allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
+    stockController.stockUpdate
 );
 
 // All stock items list route

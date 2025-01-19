@@ -48,7 +48,12 @@ const remove = async (req, res) => {
         const payload = req.body;
 
         payload.url?.map(async (url) => {
-            await deleteLocalFile(url);
+            if (url.startsWith('http://') || url.startsWith('https://')) {
+                url = '/public' + url.split('/public')[1];
+                await deleteLocalFile(url);
+            } else {
+                await deleteLocalFile(url);
+            }
         });
 
         return true;
@@ -84,13 +89,13 @@ const detail = async (req, res) => {
     try {
         const payload = req.body;
 
-        const stockInfo = await findOne({ 
-            model: 'Stock', 
+        const stockInfo = await findOne({
+            model: 'Stock',
             query: { _id: payload.stockId, isDeleted: false },
             options: {
-                populate:[
+                populate: [
                     {
-                        path:'vendor',
+                        path: 'vendor',
                         select: '_id name'
                     }
                 ]
@@ -98,7 +103,8 @@ const detail = async (req, res) => {
         });
 
         if (!stockInfo) {
-            return errorResponse(res, null, 'Not Found', 'Stock not exists at this moment.', 404);        }
+            return errorResponse(res, null, 'Not Found', 'Stock not exists at this moment.', 404);
+        }
 
         return stockInfo;
     } catch (error) {
@@ -128,6 +134,30 @@ const deletation = async (req, res) => {
     }
 };
 
+const edit = async (req, res) => {
+    try {
+        const payload = req.body;
+
+        const verifyStock = await findOne({ model: 'Stock', query: { _id: payload.stockId, isDeleted: false } });
+
+        if (!verifyStock) {
+            return errorResponse(res, null, 'Not Found', 'Stock not exists at this moment.', 404);
+        }
+
+        if (verifyStock.vendor?.toString() !== payload.vendor.value) {
+            payload.diamondId = generateProfessionalDiamondID(payload.vendor.label);
+            payload.vendor = payload.vendor.value;
+        }
+        delete payload.vendor;
+
+        const updateStock = await update({ model: 'Stock', query: { _id: payload.stockId }, updateData: { $set: payload } });
+
+        return updateStock;
+    } catch (error) {
+        return errorResponse(res, error, error.stack, 'Internal server error.', 500);
+    }
+};
+
 const all = async (req, res) => {
     try {
         const payload = req.body;
@@ -140,14 +170,22 @@ const all = async (req, res) => {
         const stockCount = countDocuments({
             model: 'Stock',
             query: {
-                isDeleted: false
+                isDeleted: false,
+                $or: [
+                    { diamondId: { $regex: payload.search, $options: 'i' } },
+                    { diamondName: { $regex: payload.search, $options: 'i' } }
+                ]
             }
         });
 
         const stocks = find({
             model: 'Stock',
             query: {
-                isDeleted: false
+                isDeleted: false,
+                $or: [
+                    { diamondId: { $regex: payload.search, $options: 'i' } },
+                    { diamondName: { $regex: payload.search, $options: 'i' } }
+                ]
             },
             options: {
                 skip,
@@ -155,7 +193,7 @@ const all = async (req, res) => {
                 sort: {
                     [payload.sortingKey]: payload.sortingOrder == 'Asc' ? 1 : -1
                 },
-                projection: { _id: 1, diamondId: 1, diamondName: 1, refNo: 1, carat: 1, shape: 1, size: 1, color: 1, clarity: 1, polish: 1 }
+                projection: { _id: 1, diamondId: 1, diamondName: 1, refNo: 1, carat: 1, shape: 1, size: 1, color: 1, clarity: 1, polish: 1, createdAt: 1 }
             }
         });
 
@@ -182,5 +220,6 @@ module.exports = {
     addNew,
     detail,
     deletation,
+    edit,
     all
 };

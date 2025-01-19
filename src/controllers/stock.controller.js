@@ -32,7 +32,7 @@ const removeDaimondImages = async (req, res) => {
 
         if (!daimond) return;
 
-        return successResponse(res, daimond, 'Daimond images removed successfully.', 201);
+        return successResponse(res, daimond, 'Daimond images removed successfully.', 200);
     } catch (error) {
         return errorResponse(res, error, error.stack, 'Internal server error.', 500);
     }
@@ -74,6 +74,18 @@ const stockDelete = async (req, res) => {
     }
 };
 
+const stockUpdate = async (req, res) => {
+    try {
+        const stock = await stockService.edit(req, res);
+
+        if (!stock) return;
+
+        return successResponse(res, stock, 'Stock updated successfully.', 200);
+    } catch (error) {
+        return errorResponse(res, error, error.stack, 'Internal server error.', 500);
+    }
+};
+
 const allStocks = async (req, res) => {
     try {
         const stocks = await stockService.all(req, res);
@@ -93,5 +105,6 @@ module.exports = {
     addNewStock,
     stockDetail,
     stockDelete,
+    stockUpdate,
     allStocks
 };
