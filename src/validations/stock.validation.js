@@ -31,7 +31,7 @@ const addNewStockSchema = Joi.object({
     cartId: Joi.string().min(1).max(255).required(),
     certificateNo: Joi.string().min(1).max(255).required(),
     diamondImages: Joi.array().items(Joi.string()).optional(),
-    remarks: Joi.string().min(1).max(500).optional(),
+    remarks: Joi.string().min(1).max(500).allow(''),
     pricePerCarat: Joi.string().required(),
     price: Joi.string().required()
 });
@@ -68,7 +68,7 @@ const updateStockDetailSchema = Joi.object({
     cartId: Joi.string().min(1).max(255).required(),
     certificateNo: Joi.string().min(1).max(255).required(),
     diamondImages: Joi.array().items(Joi.string()).optional(),
-    remarks: Joi.string().min(1).max(500).optional(),
+    remarks: Joi.string().min(1).max(500).allow(''),
     pricePerCarat: Joi.string().required(),
     price: Joi.string().required()
 });

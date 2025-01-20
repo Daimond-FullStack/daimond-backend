@@ -98,6 +98,18 @@ const allStocks = async (req, res) => {
     }
 };
 
+const importStockViaExcel = async (req, res) => {
+    try {
+        const stocks = await stockService.importExcel(req, res);
+
+        if (!stocks) return;
+
+        return successResponse(res, stocks, 'Excel uploaded successfully.', 200);
+    } catch (error) {
+        return errorResponse(res, error, error.stack, 'Internal server error.', 500);
+    }
+};
+
 module.exports = {
     allVendorsList,
     uploadDaimondImages,
@@ -106,5 +118,6 @@ module.exports = {
     stockDetail,
     stockDelete,
     stockUpdate,
-    allStocks
+    allStocks,
+    importStockViaExcel
 };

@@ -1,7 +1,8 @@
+const serverConfig = require("../config");
 const { deleteLocalFile } = require("../middleware/multer.middleware");
 const { CUSTOMER } = require("../utils/constant");
 const { find, findOne, create, countDocuments, update } = require("../utils/database");
-const { generateProfessionalDiamondID } = require("../utils/helper");
+const { generateProfessionalDiamondID, excelToJson, exportFileFunction } = require("../utils/helper");
 const { errorResponse } = require("../utils/responses");
 
 const list = async (req, res) => {
@@ -205,6 +206,111 @@ const all = async (req, res) => {
     }
 };
 
+const importExcel = async (req, res) => {
+    try {
+        const loginUser = req.user;
+
+        const excelData = await excelToJson(req.file.path);
+
+        const requiredFields = [
+            'Daimond Name', 'RefNo', 'Carat', 'Price Per Carat', 'Color', 'Shape',
+            'Size', 'Clarity', 'Polish', 'Symmetry', 'FL', 'Depth', 'Table', 'Length',
+            'Width', 'Height', 'Ratio', 'Cart ID', 'Certificate Number', 'Location'
+        ];
+
+        let skippedStock = [],
+            skippedStockDetail = [],
+            message = '';
+        const totalData = excelData.length;
+
+        for (let i = 0; i < excelData.length; i++) {
+            let rows = excelData[i];
+
+            for (let field of requiredFields) {
+                if (!rows[field]) {
+                    message = `Missing required field: ${field}`;
+                }
+            }
+
+            const verifyStock = await findOne({ model: 'Stock', query: { certificateNo: rows['Certificate Number'] } });
+
+            if (verifyStock) {
+                message = 'Stock item already exists.';
+            }
+
+            if (!message) {
+                let insertObj = {};
+                insertObj.diamondId = generateProfessionalDiamondID();
+                insertObj.createdBy = loginUser.userId;
+                insertObj.diamondName = rows['Daimond Name'];
+                insertObj.refNo = rows['RefNo'];
+                insertObj.carat = rows['Carat']?.toString();
+                insertObj.pricePerCarat = rows['Price Per Carat']?.toString();
+                insertObj.price = isNaN(rows['Carat'] * rows['Price Per Carat']) ? '0' : rows['Carat'] * rows['Price Per Carat']?.toString();
+                insertObj.color = rows['Color'];
+                insertObj.shape = rows['Shape'];
+                insertObj.size = rows['Size']?.toString();
+                insertObj.clarity = rows['Clarity'];
+                insertObj.polish = rows['Polish'];
+                insertObj.symmetry = rows['Symmetry'];
+                insertObj.fl = rows['FL'];
+                insertObj.depth = rows['Depth'];
+                insertObj.table = rows['Table'];
+                insertObj.measurement = {
+                    length: rows['Length'],
+                    height: rows['Height'],
+                    width: rows['Width']
+                };
+                insertObj.ratio = rows['Ratio'];
+                insertObj.cartId = rows['Cart ID'];
+                insertObj.certificateNo = rows['Certificate Number'];
+                insertObj.location = rows['Location'];
+                insertObj.remarks = rows['Remarks'] ?? "";
+
+                await create({ model: 'Stock', data: insertObj });
+            }
+
+            if (message) {
+                rows.Message = message;
+                rows.Row = i + 2;
+
+                skippedStockDetail.push({
+                    'Diamond Name': rows['Daimond Name'],
+                    'Ref No': rows['RefNo'],
+                    'Certificate Number': rows['Certificate Number'],
+                    'Message': rows['Message'],
+                    'Row': rows['Row'],
+                });
+                skippedStock.push(rows);
+                message = '';
+            }
+        }
+
+        const response = {};
+
+        let uploadedStock = excelData.length - skippedStock.length;
+        let skippedStockCount = skippedStock.length;
+
+        response.totalData = totalData;
+        response.skippedStockCount = skippedStockCount;
+        response.skippedStocks = skippedStockDetail;
+        response.uploadedStock = uploadedStock;
+
+        if (skippedStock && skippedStock.length > 0) {
+            const csvUrl = await exportFileFunction(
+                true,
+                'Skip-Stock-Excel',
+                skippedStock
+            );
+            response.csvUrl = serverConfig.SERVER.URL + '/' + csvUrl.filePath;
+        }
+
+        return response;
+    } catch (error) {
+        return errorResponse(res, error, error.stack, 'Internal server error.', 500);
+    }
+}
+
 module.exports = {
     list,
     upload,
@@ -213,5 +319,6 @@ module.exports = {
     detail,
     deletation,
     edit,
-    all
+    all,
+    importExcel
 };

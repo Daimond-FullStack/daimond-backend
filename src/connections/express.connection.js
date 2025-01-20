@@ -11,6 +11,7 @@ const { successResponse } = require('../utils/responses');
 const connectToExpress = async (app) => {
   try {
     app.use('/public', express.static(path.join(process.cwd(), '../daimond-backend/public')));
+    app.use('/download', express.static(path.join(process.cwd(), '../daimond-backend/download')));
 
     app.use(helmet());
 

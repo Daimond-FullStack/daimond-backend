@@ -83,4 +83,13 @@ router.post(
     stockController.allStocks
 );
 
+// Stock creation via excel file route
+router.post(
+    '/import-excel',
+    authMiddleware,
+    allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
+    upload.single('StockExcel'),
+    stockController.importStockViaExcel
+);
+
 module.exports = router;
