@@ -7,10 +7,10 @@ const removeImageSchema = Joi.object({
 const addNewStockSchema = Joi.object({
     diamondName: Joi.string().min(1).max(255).required(),
     refNo: Joi.string().min(1).max(255).required(),
-    vendor: Joi.object({
-        label: Joi.string().min(1).max(255).required(),
-        value: Joi.string().min(1).max(255).required(),
-    }).required(),
+    // vendor: Joi.object({
+    //     label: Joi.string().min(1).max(255).required(),
+    //     value: Joi.string().min(1).max(255).required(),
+    // }).required(),
     location: Joi.string().min(1).max(255).required(),
     carat: Joi.string().required(),
     color: Joi.string().min(1).max(50).required(),
@@ -30,8 +30,10 @@ const addNewStockSchema = Joi.object({
     ratio: Joi.string().required(),
     cartId: Joi.string().min(1).max(255).required(),
     certificateNo: Joi.string().min(1).max(255).required(),
-    diamondImages: Joi.array().items(Joi.string()).min(1).required(),
-    remarks: Joi.string().min(1).max(500).required()
+    diamondImages: Joi.array().items(Joi.string()).optional(),
+    remarks: Joi.string().min(1).max(500).optional(),
+    pricePerCarat: Joi.string().required(),
+    price: Joi.string().required()
 });
 
 const stockDetailSchema = Joi.object({
@@ -42,10 +44,10 @@ const updateStockDetailSchema = Joi.object({
     stockId: Joi.string().required(),
     diamondName: Joi.string().min(1).max(255).required(),
     refNo: Joi.string().min(1).max(255).required(),
-    vendor: Joi.object({
-        label: Joi.string().min(1).max(255).required(),
-        value: Joi.string().min(1).max(255).required(),
-    }).required(),
+    // vendor: Joi.object({
+    //     label: Joi.string().min(1).max(255).required(),
+    //     value: Joi.string().min(1).max(255).required(),
+    // }).required(),
     location: Joi.string().min(1).max(255).required(),
     carat: Joi.string().required(),
     color: Joi.string().min(1).max(50).required(),
@@ -65,8 +67,10 @@ const updateStockDetailSchema = Joi.object({
     ratio: Joi.string().required(),
     cartId: Joi.string().min(1).max(255).required(),
     certificateNo: Joi.string().min(1).max(255).required(),
-    diamondImages: Joi.array().items(Joi.string()).min(1).required(),
-    remarks: Joi.string().min(1).max(500).required()
+    diamondImages: Joi.array().items(Joi.string()).optional(),
+    remarks: Joi.string().min(1).max(500).optional(),
+    pricePerCarat: Joi.string().required(),
+    price: Joi.string().required()
 });
 
 const allStocksSchema = Joi.object({

@@ -73,8 +73,8 @@ const addNew = async (req, res) => {
             return errorResponse(res, null, 'Already Exist', 'Stock item already exists.', 400);
         }
 
-        payload.diamondId = generateProfessionalDiamondID(payload.vendor.label);
-        payload.vendor = payload.vendor.value;
+        payload.diamondId = generateProfessionalDiamondID();
+        // payload.vendor = payload.vendor.value;
         payload.createdBy = loginUser.userId;
 
         const createStock = await create({ model: 'Stock', data: payload });
@@ -91,15 +91,7 @@ const detail = async (req, res) => {
 
         const stockInfo = await findOne({
             model: 'Stock',
-            query: { _id: payload.stockId, isDeleted: false },
-            options: {
-                populate: [
-                    {
-                        path: 'vendor',
-                        select: '_id name'
-                    }
-                ]
-            }
+            query: { _id: payload.stockId, isDeleted: false }
         });
 
         if (!stockInfo) {
@@ -144,11 +136,11 @@ const edit = async (req, res) => {
             return errorResponse(res, null, 'Not Found', 'Stock not exists at this moment.', 404);
         }
 
-        if (verifyStock.vendor?.toString() !== payload.vendor.value) {
-            payload.diamondId = generateProfessionalDiamondID(payload.vendor.label);
-            payload.vendor = payload.vendor.value;
-        }
-        delete payload.vendor;
+        // if (verifyStock.vendor?.toString() !== payload.vendor.value) {
+        //     payload.diamondId = generateProfessionalDiamondID(payload.vendor.label);
+        //     payload.vendor = payload.vendor.value;
+        // }
+        // delete payload.vendor;
 
         const updateStock = await update({ model: 'Stock', query: { _id: payload.stockId }, updateData: { $set: payload } });
 

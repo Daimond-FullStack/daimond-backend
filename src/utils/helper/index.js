@@ -32,26 +32,23 @@ exports.verifyJWT = (token) => {
         const decoded = jwt.verify(token, secret);
         return decoded;
     } catch (error) {
-        return error;   
+        return error;
     }
 }
 
 exports.generateRandomToken = (length = 32) => {
-  return crypto.randomBytes(length).toString("hex");
+    return crypto.randomBytes(length).toString("hex");
 };
 
-exports.generateProfessionalDiamondID = (vendorName) => {
+exports.generateProfessionalDiamondID = () => {
     const date = new Date();
     const year = date.getFullYear();
-    
-    // Get Vendor Initials (First 2 letters of vendor name, capitalize)
-    const vendorInitials = vendorName.slice(0, 2).toUpperCase();
 
     // Generate a random 4-digit number or UUID for uniqueness
     const randomElement = uuidv4().slice(0, 4).toUpperCase();
-    
+
     // Format the Diamond ID in a stylish manner
-    const diamondID = `DAI-${vendorInitials}-${year}-${randomElement}`;
-    
+    const diamondID = `DAI-${year}-${randomElement}`;
+
     return diamondID;
 };

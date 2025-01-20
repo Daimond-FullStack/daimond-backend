@@ -6,7 +6,7 @@ const register = async (req, res) => {
     try {
         const payload = req.body;
 
-        const verifyCustomer = await findOne({ model: 'Customer', query: { email: payload.email, isDeleted: false } });
+        const verifyCustomer = await findOne({ model: 'Customer', query: { phone: payload.phone, isDeleted: false } });
 
         if (verifyCustomer) {
             return errorResponse(res, null, 'Already Exist', 'Customer already exists.', 400);
@@ -70,7 +70,7 @@ const all = async (req, res) => {
                 isDeleted: false,
                 $or: [
                     { name: { $regex: payload.search, $options: 'i' } },
-                    { email: { $regex: payload.search, $options: 'i' } }
+                    { phone: { $regex: payload.search, $options: 'i' } }
                 ]
             },
             options: {

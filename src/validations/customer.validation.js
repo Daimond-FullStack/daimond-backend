@@ -6,7 +6,7 @@ const addCustomerSchema = Joi.object({
   name: Joi.string().required(),
   company: Joi.string().required(),
   phone: Joi.string().required(),
-  email: Joi.string().email().required(),
+  email: Joi.string().email().allow(''),
   address: Joi.string().required()
 });
 
@@ -24,7 +24,7 @@ const allCustomerSchema = Joi.object({
 });
 
 module.exports = {
-  addCustomerSchema, 
-  deleteCustomerSchema, 
+  addCustomerSchema,
+  deleteCustomerSchema,
   allCustomerSchema
 };

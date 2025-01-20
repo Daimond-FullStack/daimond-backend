@@ -10,7 +10,7 @@ const registrationSchema = Joi.object({
   profilePic: Joi.string().allow(''),
   firstName: Joi.string().required(),
   lastName: Joi.string().required(),
-  phone: Joi.string().required(),
+  phone: Joi.string().optional(),
   email: Joi.string().email().required(),
   password: Joi.string().required()
 });
