@@ -92,4 +92,13 @@ router.post(
     stockController.importStockViaExcel
 );
 
+// Export stock data via excel file route
+router.post(
+    '/export-excel',
+    // authMiddleware,
+    validateRequest(allStocksSchema),
+    // allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
+    stockController.exportStockExcel
+);
+
 module.exports = router;

@@ -104,7 +104,19 @@ const importStockViaExcel = async (req, res) => {
 
         if (!stocks) return;
 
-        return successResponse(res, stocks, 'Excel uploaded successfully.', 200);
+        return successResponse(res, stocks, 'Excel imported successfully.', 200);
+    } catch (error) {
+        return errorResponse(res, error, error.stack, 'Internal server error.', 500);
+    }
+};
+
+const exportStockExcel = async (req, res) => {
+    try {
+        const stocks = await stockService.exportExcel(req, res);
+
+        if (!stocks) return;
+
+        return successResponse(res, stocks, 'Excel exported successfully.', 200);
     } catch (error) {
         return errorResponse(res, error, error.stack, 'Internal server error.', 500);
     }
@@ -119,5 +131,6 @@ module.exports = {
     stockDelete,
     stockUpdate,
     allStocks,
-    importStockViaExcel
+    importStockViaExcel,
+    exportStockExcel
 };

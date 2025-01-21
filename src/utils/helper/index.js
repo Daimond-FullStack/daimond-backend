@@ -132,3 +132,19 @@ exports.excelFileDownload = async (fileName, data) => {
         }
     });
 };
+
+exports.convertToIST = (date) => {
+    const utcDate = new Date(date);
+    const IST_OFFSET = 5.5 * 60;
+    const istDate = new Date(utcDate.getTime() + (IST_OFFSET * 60 * 1000));
+    return istDate.toISOString().replace("T", " ").split(".")[0];
+}
+
+exports.getExcelFileName = (page) => {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const randomElement = uuidv4().slice(0, 4).toUpperCase();
+    return `${page}_data_export_${year}-${month}-${day}-${randomElement}`;
+};

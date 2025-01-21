@@ -1,9 +1,11 @@
-const serverConfig = require("../config");
 const { deleteLocalFile } = require("../middleware/multer.middleware");
+
+const serverConfig = require("../config");
+
 const { CUSTOMER } = require("../utils/constant");
-const { find, findOne, create, countDocuments, update } = require("../utils/database");
-const { generateProfessionalDiamondID, excelToJson, exportFileFunction } = require("../utils/helper");
 const { errorResponse } = require("../utils/responses");
+const { find, findOne, create, countDocuments, update } = require("../utils/database");
+const { generateProfessionalDiamondID, excelToJson, exportFileFunction, convertToIST, getExcelFileName, excelFileDownload } = require("../utils/helper");
 
 const list = async (req, res) => {
     try {
@@ -311,6 +313,101 @@ const importExcel = async (req, res) => {
     }
 }
 
+const exportExcel = async (req, res) => {
+    try {
+        const payload = req.body;
+
+        const excelHeaders = [
+            "Diamond ID", "Diamond Name", "Reference Number", "Location", "Carat", "Color", "Shape",
+            "Size", "Clarity", "Polish", "Symmetry", "Fluorescence", "Depth", "Table", "Measurement",
+            "Ratio", "Cart ID", "Certificate Number", "Diamond Images", "Remarks", "Status", "Created By",
+            "Created At", "Updated At"
+        ];
+
+        const headerMapping = {
+            "Diamond ID": "diamondId",
+            "Diamond Name": "diamondName",
+            "Reference Number": "refNo",
+            "Location": "location",
+            "Carat": "carat",
+            "Color": "color",
+            "Shape": "shape",
+            "Size": "size",
+            "Clarity": "clarity",
+            "Polish": "polish",
+            "Symmetry": "symmetry",
+            "Fluorescence": "fl",
+            "Depth": "depth",
+            "Table": "table",
+            "Measurement": "measurement",
+            "Ratio": "ratio",
+            "Cart ID": "cartId",
+            "Certificate Number": "certificateNo",
+            "Diamond Images": "diamondImages",
+            "Remarks": "remarks",
+            "Status": "status",
+            "Created By": "createdBy",
+            "Created At": "createdAt",
+            "Updated At": "updatedAt"
+        };
+
+        const stocks = await find({
+            model: 'Stock',
+            query: {
+                isDeleted: false,
+                $or: [
+                    { diamondId: { $regex: payload.search, $options: 'i' } },
+                    { diamondName: { $regex: payload.search, $options: 'i' } }
+                ]
+            },
+            options: {
+                populate: {
+                    path: 'createdBy',
+                    select: 'fullName userType'
+                },
+                sort: {
+                    [payload.sortingKey]: payload.sortingOrder == 'Asc' ? 1 : -1
+                },
+                projection: { isDeleted: 0, deletedAt: 0 }
+            }
+        });
+
+        const mappedStockData = stocks.map((stock) => {
+            return excelHeaders.reduce((result, header) => {
+                const fieldPath = headerMapping[header];
+                let fieldValue;
+
+                if (header === "Measurement") {
+                    fieldValue = `${stock.measurement.length} x ${stock.measurement.height} x ${stock.measurement.width}`;
+                } else {
+                    fieldValue = fieldPath.split('.').reduce((obj, key) => obj && obj[key], stock);
+                }
+
+                if (header === "Diamond Images") {
+                    result[header] = fieldValue ? fieldValue.map(imagePath => `${serverConfig.SERVER.URL}${imagePath}`).join(", ") : "";
+                }
+                else if (header === "Created By") {
+                    result[header] = `${stock.createdBy.fullName} | ${stock.createdBy.userType}`;
+                }
+                else if (header === "Created At" || header === "Updated At") {
+                    result[header] = fieldValue ? convertToIST(fieldValue) : "";
+                }
+                else {
+                    result[header] = fieldValue || "";
+                }
+
+                return result;
+            }, {});
+        });
+
+        const tempFile = await excelFileDownload(getExcelFileName('stock'), mappedStockData);
+
+        return `${serverConfig.SERVER.URL}${tempFile.replace('.', '')}`
+    } catch (error) {
+        return errorResponse(res, error, error.stack, 'Internal server error.', 500);
+    }
+}
+
 module.exports = {
     list,
     upload,
@@ -320,5 +417,6 @@ module.exports = {
     deletation,
     edit,
     all,
-    importExcel
+    importExcel,
+    exportExcel
 };
