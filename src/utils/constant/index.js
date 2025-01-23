@@ -18,5 +18,9 @@ module.exports = {
     AVAILABLE: 'Available',
     ON_MEMO: 'On Memo',
     SOLD: 'Sold'
+  },
+  MEMO_STATUS: {
+    PENDING: 'Pending',
+    DUE_PASS: 'Due Pass'
   }
 };
