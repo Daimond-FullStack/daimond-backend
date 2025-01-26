@@ -8,18 +8,18 @@ const handleQueryError = (error, queryName) => {
     throw error;
 };
 
-const find = async ({ model, query = {}, options = {} }) => {
+const find = async ({ model, query = {}, projection = {}, options = {} }) => {
     try {
-        const results = await schema[model].find(query, {}, options);
+        const results = await schema[model].find(query, projection, options);
         return results;
     } catch (error) {
         handleQueryError(error, 'find');
     }
 };
 
-const findOne = async ({ model, query = {}, options = {} }) => {
+const findOne = async ({ model, query = {}, projection = {}, options = {} }) => {
     try {
-        const result = await schema[model].findOne(query, {}, options);
+        const result = await schema[model].findOne(query, projection, options);
         return result;
     } catch (error) {
         handleQueryError(error, 'findOne');

@@ -188,7 +188,7 @@ const all = async (req, res) => {
                 sort: {
                     [payload.sortingKey]: payload.sortingOrder == 'Asc' ? 1 : -1
                 },
-                projection: { _id: 1, diamondId: 1, diamondName: 1, refNo: 1, carat: 1, shape: 1, size: 1, color: 1, clarity: 1, polish: 1, createdAt: 1 }
+                projection: { _id: 1, diamondId: 1, diamondName: 1, refNo: 1, carat: 1, shape: 1, size: 1, color: 1, clarity: 1, polish: 1, createdAt: 1, status: 1 }
             }
         });
 

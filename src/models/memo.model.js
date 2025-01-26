@@ -7,7 +7,6 @@ const memoSchema = new mongoose.Schema({
     status: { type: String, enum: Object.values(CONSTANT.MEMO_STATUS), default: CONSTANT.MEMO_STATUS.PENDING },
     numberOfItems: { type: Number, required: true },
     totalValue: { type: String, required: true },
-    dueDate: { type: Date, required: true },
     isDeleted: { type: Boolean, default: false },
     deletedAt: { type: Date, default: null },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
