@@ -99,10 +99,10 @@ const creation = async (req, res) => {
         const itemsRefNo = payload.items?.map(item => item?.refNo)
         const stockVerification = await find({
             model: 'Stock',
-            query: { refNo: { $in: itemsRefNo }, status: CONSTANT.STOCK_STATUS.AVAILABLE, isDeleted: false }
+            query: { refNo: { $in: itemsRefNo }, status: { $ne: CONSTANT.STOCK_STATUS.AVAILABLE }, isDeleted: false }
         });
 
-        if (!stockVerification.length && stockVerification.length === itemsRefNo.length) {
+        if (stockVerification.length) {
             return errorResponse(res, null, 'Not Found', 'One or more items are not available in stock.', 404);
         }
 
