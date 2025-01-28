@@ -4,6 +4,8 @@ const Customer = require('./customer.model');
 const Stock = require('./stock.model');
 const Memo = require('./memo.model');
 const MemoItem = require('./memo-item.model');
+const Invoice = require('./invoice.model');
+const InvoiceItem = require('./invoice-item.model');
 
 module.exports = {
     User,
@@ -11,5 +13,7 @@ module.exports = {
     Customer,
     Stock,
     Memo,
-    MemoItem
+    MemoItem,
+    Invoice,
+    InvoiceItem
 };
