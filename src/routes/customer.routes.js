@@ -9,13 +9,13 @@ const allowedRoles = require('../middleware/role.middleware');
 const validateRequest = require('../middleware/validate.middleware');
 const authMiddleware = require('../middleware/auth.middleware');
 
-const { addCustomerSchema, deleteCustomerSchema, allCustomerSchema } = require('../validations/customer.validation');
+const customerValidator = require('../validations/customer.validation');
 
 // Customer/Vendor registration route
 router.post(
     '/register',
     authMiddleware,
-    validateRequest(addCustomerSchema),
+    validateRequest(customerValidator.addCustomerSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     customerController.registerCustomer
 );
@@ -24,7 +24,7 @@ router.post(
 router.post(
     '/delete',
     authMiddleware,
-    validateRequest(deleteCustomerSchema),
+    validateRequest(customerValidator.deleteCustomerSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     customerController.deleteCustomer
 );
@@ -33,7 +33,7 @@ router.post(
 router.post(
     '/all-customer',
     authMiddleware,
-    validateRequest(allCustomerSchema),
+    validateRequest(customerValidator.allCustomerSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     customerController.allCustomer
 );

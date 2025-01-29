@@ -9,7 +9,7 @@ const allowedRoles = require('../middleware/role.middleware');
 const validateRequest = require('../middleware/validate.middleware');
 const authMiddleware = require('../middleware/auth.middleware');
 
-const { fetchStockSchema, createInvoiceSchema, invoiceDetailSchema, invoiceUpdateSchema, allInvoiceSchema } = require('../validations/invoice.validation');
+const invoiceValidator = require('../validations/invoice.validation');
 
 // All Customer List route
 router.get(
@@ -23,7 +23,7 @@ router.get(
 router.post(
     '/fetch-stock',
     authMiddleware,
-    validateRequest(fetchStockSchema),
+    validateRequest(invoiceValidator.fetchStockSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     invoiceController.fetchStock
 );
@@ -32,7 +32,7 @@ router.post(
 router.post(
     '/create',
     authMiddleware,
-    validateRequest(createInvoiceSchema),
+    validateRequest(invoiceValidator.createInvoiceSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     invoiceController.createInvoice
 );
@@ -41,7 +41,7 @@ router.post(
 router.post(
     '/detail',
     authMiddleware,
-    validateRequest(invoiceDetailSchema),
+    validateRequest(invoiceValidator.invoiceDetailSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     invoiceController.invoiceDetail
 );
@@ -50,7 +50,7 @@ router.post(
 router.post(
     '/delete',
     authMiddleware,
-    validateRequest(invoiceDetailSchema),
+    validateRequest(invoiceValidator.invoiceDetailSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     invoiceController.invoiceDelete
 );
@@ -59,7 +59,7 @@ router.post(
 router.post(
     '/update',
     authMiddleware,
-    validateRequest(invoiceUpdateSchema),
+    validateRequest(invoiceValidator.invoiceUpdateSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     invoiceController.invoiceUpdate
 );
@@ -68,9 +68,27 @@ router.post(
 router.post(
     '/all-invoice',
     authMiddleware,
-    validateRequest(allInvoiceSchema),
+    validateRequest(invoiceValidator.allInvoiceSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     invoiceController.allInvoice
+);
+
+// Change invoice payment status route
+router.post(
+    '/change-status',
+    authMiddleware,
+    validateRequest(invoiceValidator.changeStatusSchema),
+    allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
+    invoiceController.changeStatus
+);
+
+// Fetch all invoice route
+router.post(
+    '/mail-invoice',
+    authMiddleware,
+    // validateRequest(invoiceValidator.sendInvoiceMail),
+    allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
+    invoiceController.sendInvoiceMail
 );
 
 module.exports = router;

@@ -10,7 +10,7 @@ const validateRequest = require('../middleware/validate.middleware');
 const authMiddleware = require('../middleware/auth.middleware');
 const { upload } = require('../middleware/multer.middleware');
 
-const { removeImageSchema, addNewStockSchema, stockDetailSchema, updateStockDetailSchema, allStocksSchema } = require('../validations/stock.validation');
+const stockValidator = require('../validations/stock.validation');
 
 // All Vendor List route
 router.get(
@@ -33,7 +33,7 @@ router.post(
 router.post(
     '/remove-image',
     authMiddleware,
-    validateRequest(removeImageSchema),
+    validateRequest(stockValidator.removeImageSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     stockController.removeDaimondImages
 );
@@ -42,7 +42,7 @@ router.post(
 router.post(
     '/add-new',
     authMiddleware,
-    validateRequest(addNewStockSchema),
+    validateRequest(stockValidator.addNewStockSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     stockController.addNewStock
 );
@@ -51,7 +51,7 @@ router.post(
 router.post(
     '/detail',
     authMiddleware,
-    validateRequest(stockDetailSchema),
+    validateRequest(stockValidator.stockDetailSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     stockController.stockDetail
 );
@@ -60,7 +60,7 @@ router.post(
 router.post(
     '/delete',
     authMiddleware,
-    validateRequest(stockDetailSchema),
+    validateRequest(stockValidator.stockDetailSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     stockController.stockDelete
 );
@@ -69,7 +69,7 @@ router.post(
 router.post(
     '/update',
     authMiddleware,
-    validateRequest(updateStockDetailSchema),
+    validateRequest(stockValidator.updateStockDetailSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     stockController.stockUpdate
 );
@@ -78,7 +78,7 @@ router.post(
 router.post(
     '/all-stocks',
     authMiddleware,
-    validateRequest(allStocksSchema),
+    validateRequest(stockValidator.allStocksSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     stockController.allStocks
 );
@@ -96,7 +96,7 @@ router.post(
 router.post(
     '/export-excel',
     authMiddleware,
-    validateRequest(allStocksSchema),
+    validateRequest(stockValidator.allStocksSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     stockController.exportStockExcel
 );

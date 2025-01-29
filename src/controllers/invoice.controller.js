@@ -86,6 +86,30 @@ const allInvoice = async (req, res) => {
     }
 };
 
+const changeStatus = async (req, res) => {
+    try {
+        const memo = await invoiceService.status(req, res);
+
+        if (!memo) return;
+
+        return successResponse(res, memo, 'Invoice marked as paid successfully.', 200);
+    } catch (error) {
+        return errorResponse(res, error, error.stack, 'Internal server error.', 500);
+    }
+};
+
+const sendInvoiceMail = async (req, res) => {
+    try {
+        const memo = await invoiceService.status(req, res);
+
+        if (!memo) return;
+
+        return successResponse(res, memo, 'Invoice marked as paid successfully.', 200);
+    } catch (error) {
+        return errorResponse(res, error, error.stack, 'Internal server error.', 500);
+    }
+};
+
 module.exports = {
     allCustomer,
     fetchStock,
@@ -93,5 +117,7 @@ module.exports = {
     invoiceDetail,
     invoiceDelete,
     invoiceUpdate,
-    allInvoice
+    allInvoice,
+    changeStatus,
+    sendInvoiceMail
 };

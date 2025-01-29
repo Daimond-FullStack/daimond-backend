@@ -10,7 +10,7 @@ const validateRequest = require('../middleware/validate.middleware');
 const authMiddleware = require('../middleware/auth.middleware');
 const { upload } = require('../middleware/multer.middleware');
 
-const { removeImageSchema, registrationSchema, updateStatusSchema, loginSchema, requestResetPasswordSchema, resetPasswordSchema, deleteUserSchema, allUserSchema } = require('../validations/user.validation');
+const userValidator = require('../validations/user.validation');
 
 // Upload Image route
 router.post(
@@ -25,7 +25,7 @@ router.post(
 router.post(
     '/remove-image',
     authMiddleware,
-    validateRequest(removeImageSchema),
+    validateRequest(userValidator.removeImageSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     userController.removeProfilePic
 );
@@ -34,7 +34,7 @@ router.post(
 router.post(
     '/register',
     authMiddleware,
-    validateRequest(registrationSchema),
+    validateRequest(userValidator.registrationSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     userController.registerUser
 );
@@ -43,7 +43,7 @@ router.post(
 router.post(
     '/update-status',
     authMiddleware,
-    validateRequest(updateStatusSchema),
+    validateRequest(userValidator.updateStatusSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     userController.updateUserStatus
 );
@@ -51,21 +51,21 @@ router.post(
 // Login route
 router.post(
     '/login',
-    validateRequest(loginSchema),
+    validateRequest(userValidator.loginSchema),
     userController.loginUser
 );
 
 // Request Reset User Password route
 router.post(
     '/request-reset-password',
-    validateRequest(requestResetPasswordSchema),
+    validateRequest(userValidator.requestResetPasswordSchema),
     userController.requestResetUserPassword
 );
 
 // Reset User Password route
 router.post(
     '/reset-password',
-    validateRequest(resetPasswordSchema),
+    validateRequest(userValidator.resetPasswordSchema),
     userController.resetUserPassword
 );
 
@@ -73,7 +73,7 @@ router.post(
 router.post(
     '/delete',
     authMiddleware,
-    validateRequest(deleteUserSchema),
+    validateRequest(userValidator.deleteUserSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     userController.deleteUser
 );
@@ -82,7 +82,7 @@ router.post(
 router.post(
     '/all-user',
     authMiddleware,
-    validateRequest(allUserSchema),
+    validateRequest(userValidator.allUserSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     userController.allUser
 );

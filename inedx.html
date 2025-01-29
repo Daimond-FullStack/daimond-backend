@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice</title>
+</head>
+
+<body style="font-family: 'Times New Roman', Times, serif; line-height: 1.6; color: #333;">
+    <div class="container" style="max-width: 800px; margin: 20px auto; padding: 40px; border: 1px solid #ddd; gap: 50px;">
+        <!-- Header -->
+        <div style="display: flex; flex-direction: row; justify-content: space-between; margin-bottom: 40px;">
+            <div class="header"
+                style="display: flex; text-align: start; margin-bottom: 20px; gap: 10px; align-items: center;">
+                <img src="/public/icon.png" alt="Logo" class="logo" style="max-height: 100px;">
+                <div style="text-align: center;">
+                    <h2 style="margin: 0; font-weight: bolder;">NATURE DIAM INC</h2>
+                    <p style="margin: 0; max-width: 250px; word-break: inherit; font-weight: 600;">
+                        20 West 47 Street, Suite 602<br>
+                        New York, NY 10036
+                    </p>
+                    <p></p>
+                    <p style="margin: 0; font-weight: 600;">Tel: +1 917 702 1701</p>
+                    <p style="margin: 0; font-weight: 600;">E-mail: naturediaminc@gmail.com</p>
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <h2 style="margin: 0; font-weight: bolder;">INVOICE</h2>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; border: 2px solid #333;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 10px; border: 2px solid #333; text-align: center;">Date</th>
+                            <th style="padding: 10px; border: 2px solid #333; text-align: center;">Number</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 10px; border: 2px solid #333; text-align: center;">09/07/2024</td>
+                            <td style="padding: 10px; border: 2px solid #333; text-align: center;">INV-00001</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Sub Header -->
+        <div style="display: flex; flex-direction: row; justify-content: space-between; margin-bottom: 40px;">
+            <div
+                style="max-width: 40%; width: 100%; border: 2px solid #333; display: flex; flex-direction: column; height: 150px;">
+                <div style="border-bottom: 2px solid #333; height: 30px;">
+                    <h4 style="margin: 0; padding-left: 10px;">Bill To</h4>
+                </div>
+                <div style="height: 120px; overflow: hidden; padding: 5px;">
+                    <p style="margin: 0; font-size: 14px ;">John Doe</p>
+                    <p style="margin: 0; font-size: 14px ;">123 Some St, Some City</p>
+                    <p style="margin: 0; font-size: 14px ;">123-456-7890</p>
+                </div>
+            </div>
+            <div
+                style="max-width: 40%; width: 100%; border: 2px solid #333; display: flex; flex-direction: column; height: 150px;">
+                <div style="border-bottom: 2px solid #333; height: 30px;">
+                    <h4 style="margin: 0; padding-left: 10px;">Ship To</h4>
+                </div>
+                <div style="height: 120px; overflow: hidden; padding: 5px;">
+                    <p style="margin: 0; font-size: 14px ;">456 Another St, Another City</p>
+                    <p style="margin: 0; font-size: 14px ;">987-654-3210</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Information -->
+        <div style="display: flex; flex-direction: column;">
+            <div style="display: flex; flex-direction: column; margin-left: auto; max-width: 30%; width: 100%;">
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; border: 2px solid #333;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 10px; border: 2px solid #333; text-align: center;">Terms</th>
+                            <th style="padding: 10px; border: 2px solid #333; text-align: center;">Due Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 10px; border: 2px solid #333; text-align: center;">180 Days</td>
+                            <td style="padding: 10px; border: 2px solid #333; text-align: center;">09/07/2024</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Table -->
+            <div class="details" style="margin-bottom: 20px;">
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">NO</th>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Description</th>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Carat</th>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Price/Ct</th>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- {{#each items}} -->
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: left;">{{@index + 1}}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: left;">{{description}}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: left;">{{carat}}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: left;">{{pricePerCarat}}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: left;">{{total}}</td>
+                        </tr>
+                        <!-- {{/each}} -->
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" style="padding: 10px; border: 1px solid #ddd;"></td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: left;"><strong>Total</strong>
+                            </td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: left;">{{totalAmount}}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <div class="bank-details" style="margin-top: 20px;">
+            <h3 style="margin: 0;">Bank Details:</h3>
+            <p style="margin: 0;">{{bankDetails.bankName}}</p>
+            <p style="margin: 0;">{{bankDetails.bankAddress}}</p>
+            <p style="margin: 0;">A/C #: {{bankDetails.accountNumber}}</p>
+            <p style="margin: 0;">Swift Code: {{bankDetails.swiftCode}}</p>
+        </div>
+
+        <div class="certification" style="margin-top: 20px; font-size: 0.9em;">
+            <p style="margin: 0;">{{certificationText}}</p>
+        </div>
+
+        <div class="footer" style="text-align: center; margin-top: 20px; font-size: 0.8em; color: #777;">
+            <p style="margin: 0;">{{footerText}}</p>
+        </div>
+    </div>
+</body>
+
+</html>

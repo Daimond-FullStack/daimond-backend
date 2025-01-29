@@ -360,6 +360,26 @@ const all = async (req, res) => {
     }
 };
 
+const status = async (req, res) => {
+    try {
+        const payload = req.body;
+
+        const verifyInvoice = await findOne({ model: 'Invoice', query: { _id: payload.sellInvoiceId, isDeleted: false } });
+
+        if (!verifyInvoice) {
+            return errorResponse(res, null, 'Not Found', 'Invoice not exists at this moment.', 404);
+        }
+
+        const updateObj = { status: CONSTANT.INVOICE_STATUS.PAID };
+
+        const updateStatus = await update({ model: 'Invoice', query: { _id: payload.sellInvoiceId }, updateData: { $set: updateObj } });
+
+        return updateStatus;
+    } catch (error) {
+        return errorResponse(res, error, error.stack, 'Internal server error.', 500);
+    }
+};
+
 module.exports = {
     list,
     fetch,
@@ -367,5 +387,6 @@ module.exports = {
     detail,
     deletation,
     edit,
-    all
+    all,
+    status
 };

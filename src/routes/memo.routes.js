@@ -9,7 +9,7 @@ const allowedRoles = require('../middleware/role.middleware');
 const validateRequest = require('../middleware/validate.middleware');
 const authMiddleware = require('../middleware/auth.middleware');
 
-const { fetchStockSchema, createMemoSchema, memoDetailSchema, memoUpdateSchema, allMemoSchema } = require('../validations/memo.validation');
+const memoValidator = require('../validations/memo.validation');
 
 // All Customer List route
 router.get(
@@ -23,7 +23,7 @@ router.get(
 router.post(
     '/fetch-stock',
     authMiddleware,
-    validateRequest(fetchStockSchema),
+    validateRequest(memoValidator.fetchStockSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     memoController.fetchStock
 );
@@ -32,7 +32,7 @@ router.post(
 router.post(
     '/create',
     authMiddleware,
-    validateRequest(createMemoSchema),
+    validateRequest(memoValidator.createMemoSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     memoController.createMemo
 );
@@ -41,7 +41,7 @@ router.post(
 router.post(
     '/detail',
     authMiddleware,
-    validateRequest(memoDetailSchema),
+    validateRequest(memoValidator.memoDetailSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     memoController.memoDetail
 );
@@ -50,7 +50,7 @@ router.post(
 router.post(
     '/delete',
     authMiddleware,
-    validateRequest(memoDetailSchema),
+    validateRequest(memoValidator.memoDetailSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     memoController.memoDelete
 );
@@ -59,7 +59,7 @@ router.post(
 router.post(
     '/update',
     authMiddleware,
-    validateRequest(memoUpdateSchema),
+    validateRequest(memoValidator.memoUpdateSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     memoController.memoUpdate
 );
@@ -68,7 +68,7 @@ router.post(
 router.post(
     '/all-memo',
     authMiddleware,
-    validateRequest(allMemoSchema),
+    validateRequest(memoValidator.allMemoSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     memoController.allMemo
 );

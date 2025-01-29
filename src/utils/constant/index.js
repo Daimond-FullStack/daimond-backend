@@ -22,5 +22,10 @@ module.exports = {
   MEMO_STATUS: {
     PENDING: 'Pending',
     DUE_PASS: 'Due Pass'
+  },
+  INVOICE_STATUS:{
+    PENDING: 'Pending',
+    PAID: 'Paid',
+    DUE_PASS: 'Due Pass'
   }
 };

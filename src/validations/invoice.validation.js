@@ -58,10 +58,15 @@ const allInvoiceSchema = Joi.object({
   limit: Joi.number().default(10)
 });
 
+const changeStatusSchema = Joi.object({
+  sellInvoiceId: Joi.string().required()
+});
+
 module.exports = {
   fetchStockSchema,
   createInvoiceSchema,
   invoiceDetailSchema,
   invoiceUpdateSchema,
-  allInvoiceSchema
+  allInvoiceSchema,
+  changeStatusSchema
 };
