@@ -11,7 +11,6 @@ const invoiceItemSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 invoiceItemSchema.index({ invoiceId: 1 });
-invoiceItemSchema.index({ refNo: 1 }, { unique: true });
 
 const InvoiceItem = mongoose.model("InvoiceItem", invoiceItemSchema);
 

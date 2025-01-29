@@ -96,15 +96,15 @@ const creation = async (req, res) => {
             return errorResponse(res, null, 'Not Found', 'Customer not exists at this moment.', 404);
         }
 
-        const itemsRefNo = payload.items?.map(item => item?.refNo)
-        const stockVerification = await find({
-            model: 'Stock',
-            query: { refNo: { $in: itemsRefNo }, status: { $ne: CONSTANT.STOCK_STATUS.AVAILABLE }, isDeleted: false }
-        });
+        // const itemsRefNo = payload.items?.map(item => item?.refNo)
+        // const stockVerification = await find({
+        //     model: 'Stock',
+        //     query: { refNo: { $in: itemsRefNo }, status: { $ne: CONSTANT.STOCK_STATUS.AVAILABLE }, isDeleted: false }
+        // });
 
-        if (stockVerification.length) {
-            return errorResponse(res, null, 'Not Found', 'One or more items are not available in stock.', 404);
-        }
+        // if (stockVerification.length) {
+        //     return errorResponse(res, null, 'Not Found', 'One or more items are not available in stock.', 404);
+        // }
 
         const createMemo = await create({
             model: 'Memo',
@@ -113,7 +113,6 @@ const creation = async (req, res) => {
                 customer: payload.customer,
                 numberOfItems: payload.items?.length,
                 totalValue: getColumnTotal(payload.items, 'price'),
-                carats: getColumnTotal(payload.items, 'carats'),
                 createdBy: loginUser.userId
             }
         });
@@ -151,7 +150,7 @@ const detail = async (req, res) => {
             model: 'Memo',
             query: { _id: payload.memoId, isDeleted: false },
             options: {
-                populate: { path: 'customer' }
+                populate: { path: 'customer', select: '_id name address phone' }
             }
         });
 

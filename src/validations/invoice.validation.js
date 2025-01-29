@@ -29,6 +29,9 @@ const existingItemSchema = Joi.object({
 
 const createInvoiceSchema = Joi.object({
   customer: Joi.string().required(),
+  address: Joi.string().required(),
+  shipTo: Joi.string().required(),
+  terms: Joi.string().required(),
   items: Joi.array().items(invoiceItemSchema).min(1).required()
 });
 
@@ -39,6 +42,9 @@ const invoiceDetailSchema = Joi.object({
 const invoiceUpdateSchema = Joi.object({
   sellInvoiceId: Joi.string().required(),
   customer: Joi.string().required(),
+  address: Joi.string().required(),
+  shipTo: Joi.string().required(),
+  terms: Joi.string().required(),
   newItems: Joi.array().items(invoiceItemSchema).allow(),
   removedItems: Joi.array().items(Joi.string()).allow(),
   updatedItems: Joi.array().items(existingItemSchema).allow()

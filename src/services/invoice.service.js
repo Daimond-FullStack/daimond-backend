@@ -44,34 +44,34 @@ const fetch = async (req, res) => {
     }
 };
 
-const getNextMemoNumber = async () => {
+const getNextInvoiceNumber = async () => {
     const lastMemo = await findOne({
-        model: 'Memo',
+        model: 'Invoice',
         query: {},
-        options: { sort: { memoNumber: -1 } }
+        options: { sort: { invoiceNumber: -1 } }
     });
 
-    let nextMemoNumber = "M-00001";
+    let nextInvoiceNumber = "INV-00001";
 
     if (lastMemo) {
-        const lastMemoNumber = lastMemo.memoNumber;
-        const lastNumber = parseInt(lastMemoNumber.replace('M-', ''), 10);
+        const lastInvoiceNumber = lastMemo.invoiceNumber;
+        const lastNumber = parseInt(lastInvoiceNumber.replace('INV-', ''), 10);
 
         const nextNumber = lastNumber + 1;
 
-        nextMemoNumber = `M-${nextNumber.toString().padStart(5, '0')}`;
+        nextInvoiceNumber = `INV-${nextNumber.toString().padStart(5, '0')}`;
     }
 
     const validMemoNo = await findOne({
-        model: 'Memo',
-        query: { memoNumber: nextMemoNumber }
+        model: 'Invoice',
+        query: { invoiceNumber: nextInvoiceNumber }
     });
 
     if (validMemoNo) {
         return getNextMemoNumber();
     }
 
-    return nextMemoNumber;
+    return nextInvoiceNumber;
 }
 
 function getColumnTotal(data, columnKey) {
@@ -80,6 +80,12 @@ function getColumnTotal(data, columnKey) {
         return Math.round((sum + value) * 100) / 100;
     }, 0);
 };
+
+function setDueDate(terms) {
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + Number(terms));
+    return dueDate;
+}
 
 const creation = async (req, res) => {
     try {
@@ -95,24 +101,28 @@ const creation = async (req, res) => {
             return errorResponse(res, null, 'Not Found', 'Customer not exists at this moment.', 404);
         }
 
-        const itemsRefNo = payload.items?.map(item => item?.refNo)
-        const stockVerification = await find({
-            model: 'Stock',
-            query: { refNo: { $in: itemsRefNo }, status: { $ne: CONSTANT.STOCK_STATUS.AVAILABLE }, isDeleted: false }
-        });
+        // const itemsRefNo = payload.items?.map(item => item?.refNo)
+        // const stockVerification = await find({
+        //     model: 'Stock',
+        //     query: { refNo: { $in: itemsRefNo }, status: { $ne: CONSTANT.STOCK_STATUS.AVAILABLE }, isDeleted: false }
+        // });
 
-        if (stockVerification.length) {
-            return errorResponse(res, null, 'Not Found', 'One or more items are not available in stock.', 404);
-        }
+        // if (stockVerification.length) {
+        //     return errorResponse(res, null, 'Not Found', 'One or more items are not available in stock.', 404);
+        // }
 
         const createInvoice = await create({
             model: 'Invoice',
             data: {
-                memoNumber: await getNextMemoNumber(),
                 customer: payload.customer,
+                billTo: payload.billTo,
+                invoiceNumber: await getNextInvoiceNumber(),
+                address: payload.address,
+                shipTo: payload.shipTo,
+                terms: payload.terms,
+                dueDate: setDueDate(payload.terms),
                 numberOfItems: payload.items?.length,
                 totalValue: getColumnTotal(payload.items, 'price'),
-                carats: getColumnTotal(payload.items, 'carats'),
                 createdBy: loginUser.userId
             }
         });
@@ -129,7 +139,7 @@ const creation = async (req, res) => {
             await create({
                 model: 'InvoiceItem',
                 data: {
-                    memoId: createInvoice._id,
+                    invoiceId: createInvoice._id,
                     ...element,
                     addedBy: loginUser.userId
                 }
@@ -148,9 +158,9 @@ const detail = async (req, res) => {
 
         const invoiceInfo = await findOne({
             model: 'Invoice',
-            query: { _id: payload.memoId, isDeleted: false },
+            query: { _id: payload.sellInvoiceId, isDeleted: false },
             options: {
-                populate: { path: 'customer' }
+                populate: { path: 'customer', select: '_id name address' }
             }
         });
 
@@ -201,7 +211,7 @@ const edit = async (req, res) => {
         const invoiceInfo = await findOne({
             model: 'Invoice',
             query: { _id: payload.sellInvoiceId, isDeleted: false },
-            options: { populate: { path: 'customer' } }
+            options: { populate: { path: 'customer', select: '_id name address' } }
         });
 
         if (!invoiceInfo) {
@@ -217,21 +227,21 @@ const edit = async (req, res) => {
             return errorResponse(res, null, 'Not Found', 'Customer not exists at this moment.', 404);
         }
 
-        if (payload.newItems.length > 0) {
-            const itemsRefNo = payload.newItems.map(item => item?.refNo);
-            const availableStock = await find({
-                model: 'Stock',
-                query: {
-                    refNo: { $in: itemsRefNo },
-                    status: { $ne: CONSTANT.STOCK_STATUS.AVAILABLE },
-                    isDeleted: false
-                }
-            });
+        // if (payload.newItems.length > 0) {
+        //     const itemsRefNo = payload.newItems.map(item => item?.refNo);
+        //     const availableStock = await find({
+        //         model: 'Stock',
+        //         query: {
+        //             refNo: { $in: itemsRefNo },
+        //             status: { $ne: CONSTANT.STOCK_STATUS.AVAILABLE },
+        //             isDeleted: false
+        //         }
+        //     });
 
-            if (availableStock.length) {
-                return errorResponse(res, null, 'Not Found', 'One or more items are not available in stock.', 404);
-            }
-        }
+        //     if (availableStock.length) {
+        //         return errorResponse(res, null, 'Not Found', 'One or more items are not available in stock.', 404);
+        //     }
+        // }
 
         const newItemsPromises = payload.newItems.map(async item => {
             await update({
@@ -243,7 +253,7 @@ const edit = async (req, res) => {
             return create({
                 model: 'InvoiceItem',
                 data: {
-                    memoId: memoInfo._id,
+                    invoiceId: invoiceInfo._id,
                     ...item,
                     addedBy: loginUser.userId
                 }
@@ -271,7 +281,7 @@ const edit = async (req, res) => {
 
         const invoiceItems = await find({
             model: 'InvoiceItem',
-            query: { memoId: memoInfo._id },
+            query: { invoiceId: invoiceInfo._id },
             projection: { _id: 1, price: 1, carats: 1 }
         });
 
@@ -280,9 +290,12 @@ const edit = async (req, res) => {
             query: { _id: invoiceInfo._id },
             updateData: {
                 $set: {
+                    address: payload.address,
+                    shipTo: payload.shipTo,
+                    terms: payload.terms,
+                    dueDate: setDueDate(payload.terms),
                     numberOfItems: invoiceItems.length,
-                    totalValue: getColumnTotal(invoiceItems, 'price'),
-                    carats: getColumnTotal(invoiceItems, 'carats'),
+                    totalValue: getColumnTotal(invoiceItems, 'price')
                 }
             }
         });
@@ -327,7 +340,7 @@ const all = async (req, res) => {
                     [payload.sortingKey]: payload.sortingOrder == 'Asc' ? 1 : -1
                 },
                 populate: { path: 'customer', select: 'name' },
-                projection: { _id: 1, invoiceNumber: 1, customer: 1, numberOfItems: 1, totalValue: 1, createdAt: 1, status: 1 }
+                projection: { _id: 1, invoiceNumber: 1, customer: 1, dueDate: 1, numberOfItems: 1, totalValue: 1, createdAt: 1, status: 1 }
             }
         });
 

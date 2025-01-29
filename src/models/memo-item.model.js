@@ -14,7 +14,6 @@ const memoItemSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 memoItemSchema.index({ memoId: 1 });
-memoItemSchema.index({ refNo: 1 }, { unique: true });
 
 const MemoItem = mongoose.model("MemoItem", memoItemSchema);
 
