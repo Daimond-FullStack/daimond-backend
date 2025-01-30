@@ -28,11 +28,11 @@ const fetchStock = async (req, res) => {
 
 const createInvoice = async (req, res) => {
     try {
-        const memo = await invoiceService.creation(req, res);
+        const invoice = await invoiceService.creation(req, res);
 
-        if (!memo) return;
+        if (!invoice) return;
 
-        return successResponse(res, memo, 'Invoice created successfully.', 201);
+        return successResponse(res, invoice, 'Invoice created successfully.', 201);
     } catch (error) {
         return errorResponse(res, error, error.stack, 'Internal server error.', 500);
     }
@@ -40,11 +40,11 @@ const createInvoice = async (req, res) => {
 
 const invoiceDetail = async (req, res) => {
     try {
-        const memo = await invoiceService.detail(req, res);
+        const invoice = await invoiceService.detail(req, res);
 
-        if (!memo) return;
+        if (!invoice) return;
 
-        return successResponse(res, memo, 'Invoice detail fetched successfully.', 200);
+        return successResponse(res, invoice, 'Invoice detail fetched successfully.', 200);
     } catch (error) {
         return errorResponse(res, error, error.stack, 'Internal server error.', 500);
     }
@@ -52,11 +52,11 @@ const invoiceDetail = async (req, res) => {
 
 const invoiceDelete = async (req, res) => {
     try {
-        const memo = await invoiceService.deletation(req, res);
+        const invoice = await invoiceService.deletation(req, res);
 
-        if (!memo) return;
+        if (!invoice) return;
 
-        return successResponse(res, memo, 'Invoice deleted successfully.', 200);
+        return successResponse(res, invoice, 'Invoice deleted successfully.', 200);
     } catch (error) {
         return errorResponse(res, error, error.stack, 'Internal server error.', 500);
     }
@@ -64,11 +64,11 @@ const invoiceDelete = async (req, res) => {
 
 const invoiceUpdate = async (req, res) => {
     try {
-        const memo = await invoiceService.edit(req, res);
+        const invoice = await invoiceService.edit(req, res);
 
-        if (!memo) return;
+        if (!invoice) return;
 
-        return successResponse(res, memo, 'Invoice updated successfully.', 200);
+        return successResponse(res, invoice, 'Invoice updated successfully.', 200);
     } catch (error) {
         return errorResponse(res, error, error.stack, 'Internal server error.', 500);
     }
@@ -76,11 +76,11 @@ const invoiceUpdate = async (req, res) => {
 
 const allInvoice = async (req, res) => {
     try {
-        const memo = await invoiceService.all(req, res);
+        const invoice = await invoiceService.all(req, res);
 
-        if (!memo) return;
+        if (!invoice) return;
 
-        return successResponse(res, memo, 'Invoice list fetched successfully.', 200);
+        return successResponse(res, invoice, 'Invoice list fetched successfully.', 200);
     } catch (error) {
         return errorResponse(res, error, error.stack, 'Internal server error.', 500);
     }
@@ -88,11 +88,23 @@ const allInvoice = async (req, res) => {
 
 const changeStatus = async (req, res) => {
     try {
-        const memo = await invoiceService.status(req, res);
+        const invoice = await invoiceService.status(req, res);
 
-        if (!memo) return;
+        if (!invoice) return;
 
-        return successResponse(res, memo, 'Invoice marked as paid successfully.', 200);
+        return successResponse(res, invoice, 'Invoice marked as paid successfully.', 200);
+    } catch (error) {
+        return errorResponse(res, error, error.stack, 'Internal server error.', 500);
+    }
+};
+
+const downloadInvoice = async (req, res) => {
+    try {
+        const invoice = await invoiceService.download(req, res);
+
+        if (!invoice) return;
+
+        return successResponse(res, invoice, 'Invoice pdf generated successfully.', 200);
     } catch (error) {
         return errorResponse(res, error, error.stack, 'Internal server error.', 500);
     }
@@ -100,11 +112,11 @@ const changeStatus = async (req, res) => {
 
 const sendInvoiceMail = async (req, res) => {
     try {
-        const memo = await invoiceService.status(req, res);
+        const invoice = await invoiceService.status(req, res);
 
-        if (!memo) return;
+        if (!invoice) return;
 
-        return successResponse(res, memo, 'Invoice marked as paid successfully.', 200);
+        return successResponse(res, invoice, 'Invoice marked as paid successfully.', 200);
     } catch (error) {
         return errorResponse(res, error, error.stack, 'Internal server error.', 500);
     }
@@ -119,5 +131,6 @@ module.exports = {
     invoiceUpdate,
     allInvoice,
     changeStatus,
+    downloadInvoice,
     sendInvoiceMail
 };

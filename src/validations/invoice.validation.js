@@ -62,11 +62,16 @@ const changeStatusSchema = Joi.object({
   sellInvoiceId: Joi.string().required()
 });
 
+const downloadInvoiceSchema = Joi.object({
+  sellInvoiceId: Joi.string().required()
+});
+
 module.exports = {
   fetchStockSchema,
   createInvoiceSchema,
   invoiceDetailSchema,
   invoiceUpdateSchema,
   allInvoiceSchema,
-  changeStatusSchema
+  changeStatusSchema,
+  downloadInvoiceSchema
 };

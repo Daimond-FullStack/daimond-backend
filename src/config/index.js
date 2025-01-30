@@ -40,6 +40,24 @@ const serverConfig = {
   },
   MULTER: {
     PATH: String(process.env.MULTER_PATH)
+  },
+  COMPANY: {
+    INFORMATON: {
+      PERSONAL: {
+        NAME: String(process.env.COMAPANY_NAME),
+        ADDRESS: String(process.env.COMAPANY_ADDRESS),
+        LOCATION: String(process.env.COMAPANY_LOCATION),
+        PHONE_NUMBER: String(process.env.COMAPANY_PHONE_NUMBER),
+        EMAIL: String(process.env.COMAPANY_EMAIL)
+      },
+      BANK: {
+        NAME: String(process.env.BANK_NAME),
+        ADDRESS: String(process.env.BANK_ADDRESS),
+        ACCOUNT_NUMBER: String(process.env.BANK_ACCOUNT_NUMBER),
+        ABA_ROUTING_NUMBER: String(process.env.BANK_ABA_ROUTING_NUMBER),
+        SWIFT_CODE: String(process.env.BANK_SWIFT_CODE)
+      }
+    }
   }
 };
 

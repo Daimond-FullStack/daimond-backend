@@ -1,5 +1,7 @@
+const serverConfig = require("../config");
 const CONSTANT = require("../utils/constant");
 const { findOne, create, update, find, countDocuments, deleteById } = require("../utils/database");
+const { renderTemplate, generatePdf, generatePDF } = require("../utils/helper");
 const { errorResponse } = require("../utils/responses");
 
 const list = async (req, res) => {
@@ -380,6 +382,61 @@ const status = async (req, res) => {
     }
 };
 
+const download = async (req, res) => {
+    try {
+        const payload = req.body;
+
+        const invoiceInfo = await findOne({
+            model: 'Invoice',
+            query: { _id: payload.sellInvoiceId, isDeleted: false },
+            options: {
+                populate: { path: 'customer', select: '_id name address phone' }
+            }
+        });
+
+        if (!invoiceInfo) {
+            return errorResponse(res, null, 'Not Found', 'Invoice not exists at this moment.', 404);
+        }
+
+        const invoiceItems = await find({
+            model: 'InvoiceItem',
+            query: { invoiceId: payload.sellInvoiceId },
+            projection: { invoiceId: 0, addedBy: 0, createdAt: 0, updatedAt: 0, __v: 0 },
+            options: { sort: { _id: 1 } }
+        });
+
+        const company = {
+            peronalInfo: {
+                name: serverConfig.COMPANY.INFORMATON.PERSONAL.NAME,
+                address: serverConfig.COMPANY.INFORMATON.PERSONAL.ADDRESS,
+                location: serverConfig.COMPANY.INFORMATON.PERSONAL.LOCATION,
+                phoneNumber: serverConfig.COMPANY.INFORMATON.PERSONAL.PHONE_NUMBER,
+                email: serverConfig.COMPANY.INFORMATON.PERSONAL.EMAIL
+            },
+            bankInfo: {
+                name: serverConfig.COMPANY.INFORMATON.BANK.NAME,
+                address: serverConfig.COMPANY.INFORMATON.BANK.ADDRESS,
+                accountNumber: serverConfig.COMPANY.INFORMATON.BANK.ACCOUNT_NUMBER,
+                abaRoutingNumber: serverConfig.COMPANY.INFORMATON.BANK.ABA_ROUTING_NUMBER,
+                swiftCode: serverConfig.COMPANY.INFORMATON.BANK.SWIFT_CODE
+            }
+        };
+
+        const invoice = { ...invoiceInfo._doc, totalCarats: getColumnTotal(invoiceItems), invoiceItems, company };
+
+        const templatePath = process.cwd() + '/src/utils/email/templates/invoice-mail.handlebars';
+        const outputPath = process.cwd() + `/public/Invoice/${Date.now()}-${invoice.invoiceNumber}.pdf`
+
+        const html = await renderTemplate(templatePath, invoice);
+
+        const pdf = await generatePDF(html, outputPath);
+
+        return invoice;
+    } catch (error) {
+        return errorResponse(res, error, error.stack, 'Internal server error.', 500);
+    }
+};
+
 module.exports = {
     list,
     fetch,
@@ -388,5 +445,6 @@ module.exports = {
     deletation,
     edit,
     all,
-    status
+    status,
+    download
 };

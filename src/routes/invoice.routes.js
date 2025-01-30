@@ -84,6 +84,15 @@ router.post(
 
 // Fetch all invoice route
 router.post(
+    '/download-invoice',
+    // authMiddleware,
+    validateRequest(invoiceValidator.downloadInvoiceSchema),
+    // allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
+    invoiceController.downloadInvoice
+);
+
+// Fetch all invoice route
+router.post(
     '/mail-invoice',
     authMiddleware,
     // validateRequest(invoiceValidator.sendInvoiceMail),

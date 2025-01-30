@@ -3,8 +3,11 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
+const fsPromises = require('fs').promises;
 const xlsx = require('xlsx');
 const ExcelJS = require('exceljs');
+const handlebars = require('handlebars');
+const puppeteer = require('puppeteer');
 
 const serverConfig = require('../../config');
 
@@ -148,3 +151,26 @@ exports.getExcelFileName = (page) => {
     const randomElement = uuidv4().slice(0, 4).toUpperCase();
     return `${page}_data_export_${year}-${month}-${day}-${randomElement}`;
 };
+
+exports.renderTemplate = async (templatePath, data) => {
+    try {
+        const templateSource = await fsPromises.readFile(templatePath, 'utf-8');
+        const compiledTemplate = handlebars.compile(templateSource);
+        return compiledTemplate(data);
+    } catch (error) {
+        throw new Error(`Error reading template: ${error.message}`);
+    }
+}
+
+exports.generatePDF = async (htmlContent, outputPath) => {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+
+    // Set the HTML content to the page
+    await page.setContent(htmlContent);
+
+    // Optionally, generate a PDF or screenshot
+    await page.pdf({ path: outputPath, format: 'A4' });
+
+    await browser.close();
+}

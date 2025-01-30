@@ -8,7 +8,8 @@
 </head>
 
 <body style="font-family: 'Times New Roman', Times, serif; line-height: 1.6; color: #333;">
-    <div class="container" style="max-width: 800px; margin: 20px auto; padding: 40px; border: 1px solid #ddd; gap: 50px;">
+    <div class="container"
+        style="max-width: 800px; margin: 20px auto; padding: 40px; border: 1px solid #ddd; gap: 50px;">
         <!-- Header -->
         <div style="display: flex; flex-direction: row; justify-content: space-between; margin-bottom: 40px;">
             <div class="header"
@@ -47,24 +48,24 @@
         <!-- Sub Header -->
         <div style="display: flex; flex-direction: row; justify-content: space-between; margin-bottom: 40px;">
             <div
-                style="max-width: 40%; width: 100%; border: 2px solid #333; display: flex; flex-direction: column; height: 150px;">
+                style="max-width: 40%; width: 100%; border: 2px solid #333; display: flex; flex-direction: column; min-height: 150px;">
                 <div style="border-bottom: 2px solid #333; height: 30px;">
                     <h4 style="margin: 0; padding-left: 10px;">Bill To</h4>
                 </div>
-                <div style="height: 120px; overflow: hidden; padding: 5px;">
-                    <p style="margin: 0; font-size: 14px ;">John Doe</p>
-                    <p style="margin: 0; font-size: 14px ;">123 Some St, Some City</p>
-                    <p style="margin: 0; font-size: 14px ;">123-456-7890</p>
+                <div style="flex: 1; overflow: hidden; padding: 5px; word-wrap: break-word;">
+                    <p style="margin: 0; font-size: 14px;">John Doe</p>
+                    <p style="margin: 0; font-size: 14px;">123 Some St, Some City</p>
+                    <p style="margin: 0; font-size: 14px;">123-456-7890</p>
                 </div>
             </div>
             <div
-                style="max-width: 40%; width: 100%; border: 2px solid #333; display: flex; flex-direction: column; height: 150px;">
+                style="max-width: 40%; width: 100%; border: 2px solid #333; display: flex; flex-direction: column; min-height: 150px;">
                 <div style="border-bottom: 2px solid #333; height: 30px;">
                     <h4 style="margin: 0; padding-left: 10px;">Ship To</h4>
                 </div>
-                <div style="height: 120px; overflow: hidden; padding: 5px;">
-                    <p style="margin: 0; font-size: 14px ;">456 Another St, Another City</p>
-                    <p style="margin: 0; font-size: 14px ;">987-654-3210</p>
+                <div style="flex: 1; overflow: hidden; padding: 5px; word-wrap: break-word;">
+                    <p style="margin: 0; font-size: 14px;">456 Another St, Another City</p>
+                    <p style="margin: 0; font-size: 14px;">987-654-3210</p>
                 </div>
             </div>
         </div>
@@ -113,30 +114,58 @@
                     </tbody>
                     <tfoot>
                         <tr>
-                            <td colspan="3" style="padding: 10px; border: 1px solid #ddd;"></td>
-                            <td style="padding: 10px; border: 1px solid #ddd; text-align: left;"><strong>Total</strong>
-                            </td>
-                            <td style="padding: 10px; border: 1px solid #ddd; text-align: left;">{{totalAmount}}</td>
+                            <th colspan="2" style="padding: 10px; border: 1px solid #ddd; text-align: left;">
+                                <strong>Total</strong>
+                            </th>
+                            <th colspan="1" style="padding: 10px; border: 1px solid #ddd;">
+                                <strong>{{totalCarats}}</strong>
+                            </th>
+                            <th colspan="1" style="padding: 10px; border: 1px solid #ddd;"></th>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">
+                                <strong>₹{{totalAmount}}</strong>
+                            </th>
                         </tr>
                     </tfoot>
                 </table>
             </div>
         </div>
 
-        <div class="bank-details" style="margin-top: 20px;">
-            <h3 style="margin: 0;">Bank Details:</h3>
-            <p style="margin: 0;">{{bankDetails.bankName}}</p>
-            <p style="margin: 0;">{{bankDetails.bankAddress}}</p>
-            <p style="margin: 0;">A/C #: {{bankDetails.accountNumber}}</p>
-            <p style="margin: 0;">Swift Code: {{bankDetails.swiftCode}}</p>
+        <div class="display: flex; flex-direction: row; justify-content: space-between; margin-bottom: 40px;">
+            <div
+                style="max-width: 40%; width: 100%; border: 2px solid #333; display: flex; flex-direction: column; min-height: 200px;">
+                <div style="border-bottom: 2px solid #333; height: 30px;">
+                    <h4 style="margin: 0; padding-left: 10px;">Bank Details</h4>
+                </div>
+                <div style="min-height: 170px; overflow: hidden; padding: 5px; word-wrap: break-word;">
+                    <p style="margin: 0; font-size: 14px;">Bank Name - {{bankDetails.bankName}}</p>
+                    <p style="margin: 0; font-size: 14px;">Bank Address - {{bankDetails.bankAddress}}</p>
+                    <p style="margin: 0; font-size: 14px;">A/C #: {{bankDetails.accountNumber}}</p>
+                    <p style="margin: 0; font-size: 14px;">Aba Routing No# - {{bankDetails.accountNumber}}</p>
+                    <p style="margin: 0; font-size: 14px;">Swift Code: {{bankDetails.swiftCode}}</p>
+                </div>
+            </div>
         </div>
 
         <div class="certification" style="margin-top: 20px; font-size: 0.9em;">
-            <p style="margin: 0;">{{certificationText}}</p>
+            <p style="margin: 0;">I certify that the diamonds listed on this invoice have been purchased from legitimate
+                sources not involved in funding conflict and in compliance with United Nations resolutions. These
+                diamonds are guaranteed to be conflict-free, based on personal knowledge and/or written guarantees
+                provided by the supplier. These diamonds are natural, formed and grown under geological processes unless
+                specified otherwise. In compliance with the Diamond Source Warranty Protocol, Release Number 1-0, and
+                the SRSPs, these diamonds have not been sourced from Zimbabwe Angola, any Specially Designated National
+                and Blocked Person (SDNBP) as per the U.S. Department of Treasury OFAC list, nor have they been mined,
+                extracted, produced, or manufactured, wholly or in part, in the Russian Federation. This certification
+                remains valid even if such diamonds have been substantially transtormed into other products outside of
+                the Russian Federation. We further warrant that no products containin
+                tantalum, or diamonds are supplied from entitics substantally owned or donriciled in Russia or any
+                cntities wholly or parily owned by sueh
+                entities.</p>
         </div>
 
         <div class="footer" style="text-align: center; margin-top: 20px; font-size: 0.8em; color: #777;">
-            <p style="margin: 0;">{{footerText}}</p>
+            <p style="margin: 0;">This is a computer-generated invoice and does not require a signature.</p>
+            <br />
+            <p style="margin: 0;">Visit Again Nature Diam Inc</p>
         </div>
     </div>
 </body>
