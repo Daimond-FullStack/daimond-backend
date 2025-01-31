@@ -23,9 +23,13 @@ module.exports = {
     PENDING: 'Pending',
     DUE_PASS: 'Due Pass'
   },
-  INVOICE_STATUS:{
+  INVOICE_STATUS: {
     PENDING: 'Pending',
     PAID: 'Paid',
     DUE_PASS: 'Due Pass'
+  },
+  EXPENSE_CATEGORY: {
+    BANK_CHARGE: 'Banking Charge',
+    SHIP_CHARGE: 'Shipping Charge'
   }
 };
