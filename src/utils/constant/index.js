@@ -14,6 +14,11 @@ module.exports = {
     CUSTOMER: 'Customer',
     VENDOR: 'Vendor'
   },
+  STOCK_TYPE: {
+    PARCEL_GOOD: 'Parcel Good',
+    GIA_STONE: 'GIA Stone',
+    LOOSE_STONE: 'Loose Stone'
+  },
   STOCK_STATUS: {
     AVAILABLE: 'Available',
     ON_MEMO: 'On Memo',

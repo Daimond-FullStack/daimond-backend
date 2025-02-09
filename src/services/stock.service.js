@@ -77,7 +77,6 @@ const addNew = async (req, res) => {
         }
 
         payload.diamondId = generateProfessionalDiamondID();
-        // payload.vendor = payload.vendor.value;
         payload.createdBy = loginUser.userId;
 
         const createStock = await create({ model: 'Stock', data: payload });
