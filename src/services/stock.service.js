@@ -70,7 +70,7 @@ const addNew = async (req, res) => {
         const payload = req.body;
         const loginUser = req.user;
 
-        const verifyStock = await findOne({ model: 'Stock', query: { certificateNo: payload.certificateNos } });
+        const verifyStock = await findOne({ model: 'Stock', query: { refNo: payload.refNo } });
 
         if (verifyStock) {
             return errorResponse(res, null, 'Already Exist', 'Stock item already exists.', 400);
@@ -78,6 +78,7 @@ const addNew = async (req, res) => {
 
         payload.diamondId = generateProfessionalDiamondID();
         payload.createdBy = loginUser.userId;
+        payload.availableCarat = payload.carat;
 
         const createStock = await create({ model: 'Stock', data: payload });
 
@@ -167,7 +168,8 @@ const all = async (req, res) => {
                 isDeleted: false,
                 $or: [
                     { diamondId: { $regex: payload.search, $options: 'i' } },
-                    { diamondName: { $regex: payload.search, $options: 'i' } }
+                    { diamondName: { $regex: payload.search, $options: 'i' } },
+                    { refNo: { $regex: payload.search, $options: 'i' } }
                 ]
             }
         });
@@ -178,7 +180,8 @@ const all = async (req, res) => {
                 isDeleted: false,
                 $or: [
                     { diamondId: { $regex: payload.search, $options: 'i' } },
-                    { diamondName: { $regex: payload.search, $options: 'i' } }
+                    { diamondName: { $regex: payload.search, $options: 'i' } },
+                    { refNo: { $regex: payload.search, $options: 'i' } }
                 ]
             },
             options: {
@@ -187,7 +190,7 @@ const all = async (req, res) => {
                 sort: {
                     [payload.sortingKey]: payload.sortingOrder == 'Asc' ? 1 : -1
                 },
-                projection: { _id: 1, diamondId: 1, diamondName: 1, refNo: 1, carat: 1, shape: 1, size: 1, color: 1, clarity: 1, polish: 1, createdAt: 1, status: 1 }
+                projection: { _id: 1, diamondId: 1, diamondName: 1, refNo: 1, carat: 1, shape: 1, type: 1, size: 1, color: 1, clarity: 1, polish: 1, createdAt: 1, status: 1 }
             }
         });
 

@@ -14,7 +14,7 @@ const allCustomer = async (req, res) => {
     }
 };
 
-const fetchStock = async (req, res) => {
+const fetchStockList = async (req, res) => {
     try {
         const stock = await memoService.fetch(req, res);
 
@@ -68,7 +68,7 @@ const memoUpdate = async (req, res) => {
 
         if (!memo) return;
 
-        return successResponse(res, memo, 'Memo created successfully.', 200);
+        return successResponse(res, memo, 'Memo updated successfully.', 200);
     } catch (error) {
         return errorResponse(res, error, error.stack, 'Internal server error.', 500);
     }
@@ -88,7 +88,7 @@ const allMemo = async (req, res) => {
 
 module.exports = {
     allCustomer,
-    fetchStock,
+    fetchStockList,
     createMemo,
     memoDetail,
     memoDelete,

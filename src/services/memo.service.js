@@ -1,4 +1,3 @@
-const { populate } = require("../models/user.model");
 const CONSTANT = require("../utils/constant");
 const { findOne, create, update, find, countDocuments, deleteById } = require("../utils/database");
 const { errorResponse } = require("../utils/responses");
@@ -23,16 +22,13 @@ const list = async (req, res) => {
 
 const fetch = async (req, res) => {
     try {
-        const payload = req.body;
-
-        const response = await findOne({
+        const response = await find({
             model: 'Stock',
             query: {
-                refNo: payload.refNo,
                 isDeleted: false,
                 status: CONSTANT.STOCK_STATUS.AVAILABLE
             },
-            projection: { _id: 1, refNo: 1, carat: 1, remarks: 1, pricePerCarat: 1, price: 1 }
+            projection: { _id: 1, diamondName: 1, refNo: 1, carat: 1, remarks: 1, pricePerCarat: 1, price: 1 }
         });
 
         if (!response) {
@@ -96,15 +92,31 @@ const creation = async (req, res) => {
             return errorResponse(res, null, 'Not Found', 'Customer not exists at this moment.', 404);
         }
 
-        // const itemsRefNo = payload.items?.map(item => item?.refNo)
-        // const stockVerification = await find({
-        //     model: 'Stock',
-        //     query: { refNo: { $in: itemsRefNo }, status: { $ne: CONSTANT.STOCK_STATUS.AVAILABLE }, isDeleted: false }
-        // });
+        const stockIds = payload.items.filter(item => item._id).map(item => item._id);
 
-        // if (stockVerification.length) {
-        //     return errorResponse(res, null, 'Not Found', 'One or more items are not available in stock.', 404);
-        // }
+        const stocks = await find({
+            model: 'Stock',
+            query: { _id: { $in: stockIds } },
+            projection: { _id: 1, refNo: 1, carat: 1, availableCarat: 1, memoCarat: 1, soldCarat: 1 }
+        });
+
+        for (let index = 0; index < payload.items.length; index++) {
+            const element = payload.items[index];
+
+            if (element._id) {
+                const stock = stocks.find(stock => stock._id.toString() === element._id.toString());
+
+                if (stock.availableCarat < Number(element.carat)) {
+                    return errorResponse(
+                        res,
+                        null,
+                        'Insufficient Stock',
+                        `Stock with Ref No: ${stock.refNo} has available carat ${stock.availableCarat}, which is less than the requested carat ${element.carat}.`,
+                        400
+                    );
+                }
+            }
+        }
 
         const createMemo = await create({
             model: 'Memo',
@@ -119,17 +131,37 @@ const creation = async (req, res) => {
 
         for (let index = 0; index < payload.items.length; index++) {
             const element = payload.items[index];
+            const stockId = element._id || null;
+            delete element._id;
 
-            await update({
-                model: 'Stock',
-                query: { refNo: element.refNo },
-                updateData: { $set: { status: CONSTANT.STOCK_STATUS.ON_MEMO } }
-            });
+            if (stockId !== null) {
+                const stock = stocks.find(stock => stock._id.toString() === stockId.toString());
+
+                stock.availableCarat -= Number(element.carat).toFixed(2);
+                stock.memoCarat += Number(element.carat).toFixed(2);
+                if (stock.availableCarat === 0) {
+                    stock.status = stock.memoCarat > stock.soldCarat ? CONSTANT.STOCK_STATUS.ON_MEMO : CONSTANT.STOCK_STATUS.SOLD;
+                }
+
+                await update({
+                    model: 'Stock',
+                    query: { _id: stock._id },
+                    updateData: {
+                        $set: {
+                            availableCarat: stock.availableCarat,
+                            memoCarat: stock.memoCarat,
+                            status: stock.status
+                        }
+                    }
+                });
+            }
 
             await create({
                 model: 'MemoItem',
                 data: {
                     memoId: createMemo._id,
+                    stockId: stockId,
+                    manualEntry: stockId !== null ? false : true,
                     ...element,
                     addedBy: loginUser.userId
                 }
@@ -158,12 +190,17 @@ const detail = async (req, res) => {
             return errorResponse(res, null, 'Not Found', 'Memo not exists at this moment.', 404);
         }
 
-        const memoItems = await find({
+        let memoItems = await find({
             model: 'MemoItem',
             query: { memoId: payload.memoId },
             projection: { memoId: 0, addedBy: 0, createdAt: 0, updatedAt: 0, __v: 0 },
             options: { sort: { _id: 1 } }
         });
+
+        memoItems = memoItems.map(item => ({
+            ...item._doc,
+            carat: item._doc.carat?.toString()
+        }));
 
         return { ...memoInfo._doc, memoItems };
     } catch (error) {
@@ -217,72 +254,148 @@ const edit = async (req, res) => {
             return errorResponse(res, null, 'Not Found', 'Customer not exists at this moment.', 404);
         }
 
-        if (payload.newItems.length > 0) {
-            const itemsRefNo = payload.newItems.map(item => item?.refNo);
-            const availableStock = await find({
-                model: 'Stock',
-                query: {
-                    refNo: { $in: itemsRefNo },
-                    status: { $ne: CONSTANT.STOCK_STATUS.AVAILABLE },
-                    isDeleted: false
-                }
-            });
+        const stockIds = payload.items.filter(item => item.stockId).map(item => item.stockId);
 
-            if (availableStock.length) {
-                return errorResponse(res, null, 'Not Found', 'One or more items are not available in stock.', 404);
+        const stocks = await find({
+            model: 'Stock',
+            query: { _id: { $in: stockIds } },
+            projection: { _id: 1, refNo: 1, carat: 1, availableCarat: 1, memoCarat: 1, soldCarat: 1 }
+        });
+
+        for (let index = 0; index < payload.items.length; index++) {
+            const element = payload.items[index];
+
+            if (element.stockId && element.stockId !== null) {
+                const stock = stocks.find(stock => stock._id.toString() === element.stockId.toString());
+
+                const memoItemDetail = await findOne({
+                    model: 'MemoItem',
+                    query: {
+                        memoId: payload.memoId,
+                        stockId: element.stockId
+                    }
+                });
+
+                if (memoItemDetail !== null) {
+                    stock.availableCarat = parseFloat((stock.availableCarat + memoItemDetail.carat).toFixed(2));
+                }
+
+                if (stock.availableCarat < Number(element.carat)) {
+                    return errorResponse(
+                        res,
+                        null,
+                        'Insufficient Stock',
+                        `Stock with Ref No: ${stock.refNo} has available carat ${stock.availableCarat}, which is less than the requested carat ${element.carat}.`,
+                        400
+                    );
+                }
             }
         }
 
-        const newItemsPromises = payload.newItems.map(async item => {
-            await update({
-                model: 'Stock',
-                query: { refNo: item.refNo },
-                updateData: { $set: { status: CONSTANT.STOCK_STATUS.ON_MEMO } }
-            });
+        for (let index = 0; index < payload.items.length; index++) {
+            const element = payload.items[index];
+            delete element._id;
 
-            return create({
+            if (element.stockId !== null) {
+                const stock = stocks.find(stock => stock._id.toString() === element.stockId.toString());
+
+                const memoItemDetail = await findOne({
+                    model: 'MemoItem',
+                    query: {
+                        memoId: payload.memoId,
+                        stockId: element.stockId
+                    }
+                });
+
+                if (memoItemDetail !== null) {
+                    stock.availableCarat = parseFloat((stock.availableCarat + memoItemDetail.carat).toFixed(2));
+                    stock.memoCarat = parseFloat((stock.memoCarat - memoItemDetail.carat).toFixed(2));
+                }
+
+                if (stock.memoCarat > 0 && stock.availableCarat === 0) {
+                    stock.status = CONSTANT.STOCK_STATUS.ON_MEMO;
+                } else if (stock.memoCarat === 0 && stock.availableCarat === 0 && stock.soldCarat > 0) {
+                    stock.status = CONSTANT.STOCK_STATUS.SOLD;
+                }
+
+                await update({
+                    model: 'Stock',
+                    query: { _id: stock._id },
+                    updateData: {
+                        $set: {
+                            availableCarat: stock.availableCarat,
+                            memoCarat: stock.memoCarat,
+                            status: stock.status
+                        }
+                    }
+                });
+
+                if (memoItemDetail !== null) {
+                    await update({
+                        model: 'MemoItem',
+                        query: { _id: memoItemDetail._id },
+                        updateData: { $set: element }
+                    });
+                } else {
+                    await create({
+                        model: 'MemoItem',
+                        data: {
+                            memoId: payload.memoId,
+                            stockId: stockId,
+                            manualEntry: stockId !== null ? false : true,
+                            ...element,
+                            addedBy: loginUser.userId
+                        }
+                    });
+                }
+            } else {
+                await create({
+                    model: 'MemoItem',
+                    data: {
+                        memoId: payload.memoId,
+                        stockId: element.stockId,
+                        manualEntry: element.stockId !== null ? false : true,
+                        ...element,
+                        addedBy: loginUser.userId
+                    }
+                });
+            }
+        }
+
+        for (let index = 0; index < payload.removedItems.length; index++) {
+            const element = payload.removedItems[index];
+
+            const memoItemDetail = await findOne({
                 model: 'MemoItem',
-                data: {
-                    memoId: memoInfo._id,
-                    ...item,
-                    addedBy: loginUser.userId
+                query: {
+                    memoId: payload.memoId,
+                    _id: element
                 }
             });
-        });
 
-        const removedItemsPromises = payload.removedItems.map(id =>
-            deleteById({ model: 'MemoItem', id })
-        );
+            if (memoItemDetail !== null && memoItemDetail.stockId !== null) {
+                const stock = await findOne({
+                    model: 'Stock',
+                    query: { _id: memoItemDetail.stockId }
+                });
 
-        const updatedItemsPromises = payload.updatedItems.map(item =>
-            update({
-                model: 'MemoItem',
-                query: { _id: item._id },
-                updateData: { $set: item }
-            })
-        );
+                if (stock) {
+                    stock.availableCarat = parseFloat((stock.availableCarat + memoItemDetail.carat).toFixed(2));
+                    stock.memoCarat = parseFloat((stock.memoCarat - memoItemDetail.carat).toFixed(2));
+                    stock.status = stock.status !== CONSTANT.STOCK_STATUS.AVAILABLE ? CONSTANT.STOCK_STATUS.AVAILABLE : stock.status;
+                }
+            }
 
-        // Execute all promises
-        await Promise.all([
-            ...newItemsPromises,
-            ...removedItemsPromises,
-            ...updatedItemsPromises
-        ]);
-
-        const memoItems = await find({
-            model: 'MemoItem',
-            query: { memoId: memoInfo._id },
-            projection: { _id: 1, price: 1, carats: 1 }
-        });
+            deleteById({ model: 'MemoItem', id: element })
+        };
 
         const updateMemo = await update({
             model: 'Memo',
             query: { _id: memoInfo._id },
             updateData: {
                 $set: {
-                    numberOfItems: memoItems.length,
-                    totalValue: getColumnTotal(memoItems, 'price'),
-                    carats: getColumnTotal(memoItems, 'carats'),
+                    numberOfItems: payload.items.length,
+                    totalValue: getColumnTotal(payload.items, 'price')
                 }
             }
         });

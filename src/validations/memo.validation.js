@@ -1,13 +1,10 @@
 const Joi = require('joi');
 
-const fetchStockSchema = Joi.object({
-  refNo: Joi.string().allow("").required()
-});
-
 const memoItemSchema = Joi.object({
+  _id: Joi.string().optional(),
   refNo: Joi.string().required(),
   description: Joi.string().allow(''),
-  carats: Joi.string().required(),
+  carat: Joi.string().required(),
   pricePerCarat: Joi.string().required(),
   returnInCarats: Joi.string().allow(''),
   soldInCarats: Joi.string().allow(''),
@@ -16,10 +13,11 @@ const memoItemSchema = Joi.object({
 });
 
 const existingItemSchema = Joi.object({
-  _id: Joi.string().required(),
+  _id: Joi.string().optional(),
+  stockId: Joi.string().allow(null),
   refNo: Joi.string().required(),
   description: Joi.string().allow(''),
-  carats: Joi.string().required(),
+  carat: Joi.string().required(),
   pricePerCarat: Joi.string().required(),
   returnInCarats: Joi.string().allow(''),
   soldInCarats: Joi.string().allow(''),
@@ -39,20 +37,18 @@ const memoDetailSchema = Joi.object({
 const memoUpdateSchema = Joi.object({
   memoId: Joi.string().required(),
   customer: Joi.string().required(),
-  newItems: Joi.array().items(memoItemSchema).allow(),
-  removedItems: Joi.array().items(Joi.string()).allow(),
-  updatedItems: Joi.array().items(existingItemSchema).allow()
+  items: Joi.array().items(existingItemSchema).min(1).required(),
+  removedItems: Joi.array().items(Joi.string()).allow()
 });
 
 const allMemoSchema = Joi.object({
-    sortingKey: Joi.string().allow(''),
-    sortingOrder: Joi.string().allow(''),
-    page: Joi.number().default(1),
-    limit: Joi.number().default(10)
+  sortingKey: Joi.string().allow(''),
+  sortingOrder: Joi.string().allow(''),
+  page: Joi.number().default(1),
+  limit: Joi.number().default(10)
 });
 
 module.exports = {
-  fetchStockSchema,
   createMemoSchema,
   memoDetailSchema,
   memoUpdateSchema,

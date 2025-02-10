@@ -10,30 +10,75 @@ const addNewStockSchema = Joi.object({
     diamondName: Joi.string().min(1).max(255).required(),
     refNo: Joi.string().min(1).max(255).required(),
     carat: Joi.string().required(),
-    location: Joi.string().min(1).max(255).optional(),
-    color: Joi.string().min(1).max(50).optional(),
-    shape: Joi.string().min(1).max(50).optional(),
-    size: Joi.string().min(1).max(50).optional(),
-    clarity: Joi.string().min(1).max(50).optional(),
-    polish: Joi.string().min(1).max(50).optional(),
-    symmetry: Joi.string().min(1).max(50).optional(),
-    fl: Joi.string().min(1).max(50).optional(),
-    depth: Joi.string().optional(),
-    table: Joi.string().optional(),
-    measurement: Joi.object({
-        length: Joi.string().optional(),
-        width: Joi.string().optional(),
-        height: Joi.string().optional(),
-    }).optional(),
-    ratio: Joi.string().optional(),
-    cartId: Joi.string().min(1).max(255).optional(),
-    certificateNo: Joi.string().min(1).max(255).optional(),
-    diamondImages: Joi.array().items(Joi.string()).optional(),
+    location: Joi.string().min(1).max(255).required(),
+    shape: Joi.string().min(1).max(50).required(),
+    color: Joi.string().min(1).max(50).allow(''),
+    clarity: Joi.string().min(1).max(50).allow(''),
+    pic: Joi.string().default(1),
     remarks: Joi.string().min(1).max(500).allow(''),
-    cost: Joi.string().optional(),
-    costPerCarat: Joi.string().optional(),
-    pricePerCarat: Joi.string().optional(),
-    price: Joi.string().optional()
+    cost: Joi.string().allow(''),
+    costPerCarat: Joi.string().allow(''),
+    pricePerCarat: Joi.string().allow(''),
+    price: Joi.string().allow(''),
+    size: Joi.string().min(1).max(50).when("type", {
+        is: CONSTANT.STOCK_TYPE.GIA_STONE,
+        then: Joi.allow(''),
+        otherwise: Joi.forbidden(),
+    }),
+    polish: Joi.string().min(1).max(50).when("type", {
+        is: CONSTANT.STOCK_TYPE.GIA_STONE,
+        then: Joi.allow(''),
+        otherwise: Joi.forbidden(),
+    }),
+    symmetry: Joi.string().min(1).max(50).when("type", {
+        is: CONSTANT.STOCK_TYPE.GIA_STONE,
+        then: Joi.allow(''),
+        otherwise: Joi.forbidden(),
+    }),
+    fl: Joi.string().min(1).max(50).when("type", {
+        is: CONSTANT.STOCK_TYPE.GIA_STONE,
+        then: Joi.allow(''),
+        otherwise: Joi.forbidden(),
+    }),
+    depth: Joi.string().when("type", {
+        is: CONSTANT.STOCK_TYPE.GIA_STONE,
+        then: Joi.allow(''),
+        otherwise: Joi.forbidden(),
+    }),
+    table: Joi.string().when("type", {
+        is: CONSTANT.STOCK_TYPE.GIA_STONE,
+        then: Joi.allow(''),
+        otherwise: Joi.forbidden(),
+    }),
+    measurement: Joi.object({
+        length: Joi.string().allow(''),
+        width: Joi.string().allow(''),
+        height: Joi.string().allow(''),
+    }).when("type", {
+        is: CONSTANT.STOCK_TYPE.GIA_STONE,
+        then: Joi.allow(''),
+        otherwise: Joi.forbidden(),
+    }),
+    ratio: Joi.string().when("type", {
+        is: CONSTANT.STOCK_TYPE.GIA_STONE,
+        then: Joi.allow(''),
+        otherwise: Joi.forbidden(),
+    }),
+    cartId: Joi.string().min(1).max(255).when("type", {
+        is: CONSTANT.STOCK_TYPE.GIA_STONE,
+        then: Joi.allow(''),
+        otherwise: Joi.forbidden(),
+    }),
+    certificateNo: Joi.string().min(1).max(255).when("type", {
+        is: CONSTANT.STOCK_TYPE.GIA_STONE,
+        then: Joi.allow(''),
+        otherwise: Joi.forbidden(),
+    }),
+    diamondImages: Joi.array().items(Joi.string()).when("type", {
+        is: CONSTANT.STOCK_TYPE.GIA_STONE,
+        then: Joi.allow(''),
+        otherwise: Joi.forbidden(),
+    })
 });
 
 const stockDetailSchema = Joi.object({

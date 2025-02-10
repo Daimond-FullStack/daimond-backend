@@ -20,12 +20,11 @@ router.get(
 );
 
 // Find RefNo Throw Stock route
-router.post(
-    '/fetch-stock',
+router.get(
+    '/fetch-stock-list',
     authMiddleware,
-    validateRequest(memoValidator.fetchStockSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
-    memoController.fetchStock
+    memoController.fetchStockList
 );
 
 // Memo create route
