@@ -28,7 +28,7 @@ const fetch = async (req, res) => {
                 isDeleted: false,
                 status: CONSTANT.STOCK_STATUS.AVAILABLE
             },
-            projection: { _id: 1, diamondName: 1, refNo: 1, carat: 1, remarks: 1, pricePerCarat: 1, price: 1 }
+            projection: { _id: 1, diamondName: 1, refNo: 1, carat: '$availableCarat', remarks: 1, pricePerCarat: 1, price: 1 }
         });
 
         if (!response) {
@@ -137,10 +137,17 @@ const creation = async (req, res) => {
             if (stockId !== null) {
                 const stock = stocks.find(stock => stock._id.toString() === stockId.toString());
 
-                stock.availableCarat -= Number(element.carat).toFixed(2);
-                stock.memoCarat += Number(element.carat).toFixed(2);
+                stock.availableCarat = Number((stock.availableCarat - Number(element.carat)).toFixed(2));
+                stock.memoCarat = Number((stock.memoCarat + Number(element.carat)).toFixed(2));
+
                 if (stock.availableCarat === 0) {
-                    stock.status = stock.memoCarat > stock.soldCarat ? CONSTANT.STOCK_STATUS.ON_MEMO : CONSTANT.STOCK_STATUS.SOLD;
+                    if (stock.memoCarat > 0 && stock.availableCarat === 0) {
+                        stock.status = CONSTANT.STOCK_STATUS.ON_MEMO;
+                    } else if (stock.memoCarat === 0 && stock.availableCarat === 0 && stock.soldCarat > 0) {
+                        stock.status = CONSTANT.STOCK_STATUS.SOLD;
+                    } else {
+                        stock.status = CONSTANT.STOCK_STATUS.AVAILABLE
+                    }
                 }
 
                 await update({
@@ -218,6 +225,65 @@ const deletation = async (req, res) => {
             return errorResponse(res, null, 'Not Found', 'Memo not exists at this moment.', 404);
         }
 
+        const memoItems = await find({
+            model: 'MemoItem',
+            query: { memoId: payload.memoId },
+            projection: { memoId: 0, addedBy: 0, createdAt: 0, updatedAt: 0, __v: 0 },
+            options: { sort: { _id: 1 } }
+        });
+
+        const stockIds = memoItems.filter(item => item.stockId).map(item => item.stockId);
+
+        const stocks = await find({
+            model: 'Stock',
+            query: { _id: { $in: stockIds } },
+            projection: { _id: 1, refNo: 1, carat: 1, availableCarat: 1, memoCarat: 1, soldCarat: 1 }
+        });
+
+        for (let index = 0; index < memoItems.length; index++) {
+            const element = memoItems[index];
+
+            const memoItemDetail = await findOne({
+                model: 'MemoItem',
+                query: {
+                    memoId: payload.memoId,
+                    _id: element._id
+                }
+            });
+
+            if (element.stockId !== null) {
+                const stock = stocks.find(stock => stock._id.toString() === element.stockId.toString());
+
+                if (stock) {
+                    stock.availableCarat = Number((stock.availableCarat + Number(memoItemDetail.carat)).toFixed(2));
+                    stock.memoCarat = Number((stock.memoCarat - Number(memoItemDetail.carat)).toFixed(2));
+
+                    if (stock.memoCarat > 0 && stock.availableCarat === 0) {
+                        stock.status = CONSTANT.STOCK_STATUS.ON_MEMO;
+                    } else if (stock.memoCarat === 0 && stock.availableCarat === 0 && stock.soldCarat > 0) {
+                        stock.status = CONSTANT.STOCK_STATUS.SOLD;
+                    } else {
+                        stock.status = CONSTANT.STOCK_STATUS.AVAILABLE
+                    }
+                }
+
+                await update({
+                    model: 'Stock',
+                    query: { _id: stock._id },
+                    updateData: {
+                        $set: {
+                            availableCarat: stock.availableCarat,
+                            memoCarat: stock.memoCarat,
+                            status: stock.status
+                        }
+                    }
+                });
+            }
+
+            deleteById({ model: 'MemoItem', id: element._id });
+        }
+
+
         let updateObj = {};
         updateObj.isDeleted = true;
         updateObj.deletedAt = new Date();
@@ -262,11 +328,14 @@ const edit = async (req, res) => {
             projection: { _id: 1, refNo: 1, carat: 1, availableCarat: 1, memoCarat: 1, soldCarat: 1 }
         });
 
+        // Clone stock data to avoid mutation issues
+        const stocksCopy = JSON.parse(JSON.stringify(stocks));
+
         for (let index = 0; index < payload.items.length; index++) {
             const element = payload.items[index];
 
             if (element.stockId && element.stockId !== null) {
-                const stock = stocks.find(stock => stock._id.toString() === element.stockId.toString());
+                const stockValidate = stocks.find(stock => stock._id.toString() === element.stockId.toString());
 
                 const memoItemDetail = await findOne({
                     model: 'MemoItem',
@@ -277,15 +346,15 @@ const edit = async (req, res) => {
                 });
 
                 if (memoItemDetail !== null) {
-                    stock.availableCarat = parseFloat((stock.availableCarat + memoItemDetail.carat).toFixed(2));
+                    stockValidate.availableCarat = Number((stockValidate.availableCarat + Number(memoItemDetail.carat)).toFixed(2));
                 }
 
-                if (stock.availableCarat < Number(element.carat)) {
+                if (stockValidate.availableCarat < Number(element.carat)) {
                     return errorResponse(
                         res,
                         null,
                         'Insufficient Stock',
-                        `Stock with Ref No: ${stock.refNo} has available carat ${stock.availableCarat}, which is less than the requested carat ${element.carat}.`,
+                        `Stock with Ref No: ${stockValidate.refNo} has available carat ${stockValidate.availableCarat}, which is less than the requested carat ${element.carat}.`,
                         400
                     );
                 }
@@ -294,61 +363,102 @@ const edit = async (req, res) => {
 
         for (let index = 0; index < payload.items.length; index++) {
             const element = payload.items[index];
-            delete element._id;
 
-            if (element.stockId !== null) {
-                const stock = stocks.find(stock => stock._id.toString() === element.stockId.toString());
+            const memoItemDetail = await findOne({
+                model: 'MemoItem',
+                query: {
+                    _id: element._id,
+                    memoId: payload.memoId,
+                    stockId: element.stockId
+                }
+            });
 
-                const memoItemDetail = await findOne({
-                    model: 'MemoItem',
-                    query: {
-                        memoId: payload.memoId,
-                        stockId: element.stockId
+            if (memoItemDetail !== null) {
+                delete element._id;
+
+                if (element.stockId !== null) {
+                    const stock = stocksCopy.find(stock => stock._id.toString() === element.stockId.toString());
+                    // console.log("Find Stock : ", stock);
+
+                    if (memoItemDetail !== null) {
+                        stock.availableCarat = Number(((stock.availableCarat + Number(memoItemDetail.carat)) - Number(element.carat)).toFixed(2));
+                        stock.memoCarat = Number(((stock.memoCarat - Number(memoItemDetail.carat)) + Number(element.carat)).toFixed(2));
                     }
-                });
 
-                if (memoItemDetail !== null) {
-                    stock.availableCarat = parseFloat((stock.availableCarat + memoItemDetail.carat).toFixed(2));
-                    stock.memoCarat = parseFloat((stock.memoCarat - memoItemDetail.carat).toFixed(2));
-                }
+                    if (stock.memoCarat > 0 && stock.availableCarat === 0) {
+                        stock.status = CONSTANT.STOCK_STATUS.ON_MEMO;
+                    } else if (stock.memoCarat === 0 && stock.availableCarat === 0 && stock.soldCarat > 0) {
+                        stock.status = CONSTANT.STOCK_STATUS.SOLD;
+                    } else {
+                        stock.status = CONSTANT.STOCK_STATUS.AVAILABLE
+                    }
+                    // console.log("Update Stock : ", stock);
 
-                if (stock.memoCarat > 0 && stock.availableCarat === 0) {
-                    stock.status = CONSTANT.STOCK_STATUS.ON_MEMO;
-                } else if (stock.memoCarat === 0 && stock.availableCarat === 0 && stock.soldCarat > 0) {
-                    stock.status = CONSTANT.STOCK_STATUS.SOLD;
-                }
+                    // console.log("Update With Stock Element : ", element);
 
-                await update({
-                    model: 'Stock',
-                    query: { _id: stock._id },
-                    updateData: {
-                        $set: {
-                            availableCarat: stock.availableCarat,
-                            memoCarat: stock.memoCarat,
-                            status: stock.status
+                    await update({
+                        model: 'Stock',
+                        query: { _id: stock._id },
+                        updateData: {
+                            $set: {
+                                availableCarat: stock.availableCarat,
+                                memoCarat: stock.memoCarat,
+                                status: stock.status
+                            }
                         }
-                    }
-                });
+                    });
 
-                if (memoItemDetail !== null) {
                     await update({
                         model: 'MemoItem',
                         query: { _id: memoItemDetail._id },
                         updateData: { $set: element }
                     });
                 } else {
-                    await create({
+                    // console.log("Update Without Stock Element : ", element);
+
+                    await update({
                         model: 'MemoItem',
-                        data: {
-                            memoId: payload.memoId,
-                            stockId: stockId,
-                            manualEntry: stockId !== null ? false : true,
-                            ...element,
-                            addedBy: loginUser.userId
-                        }
+                        query: { _id: memoItemDetail._id },
+                        updateData: { $set: element }
                     });
                 }
             } else {
+                // console.log("Create New Element : ", element);
+
+                if (element._id) {
+                    const stock = await findOne({
+                        model: 'Stock',
+                        query: { _id: element._id },
+                        projection: { _id: 1, refNo: 1, carat: 1, availableCarat: 1, memoCarat: 1, soldCarat: 1 }
+                    });
+
+                    if (stock) {
+                        stock.availableCarat = Number((stock.availableCarat - Number(element.carat)).toFixed(2));
+                        stock.memoCarat = Number((stock.memoCarat + Number(element.carat)).toFixed(2));
+
+                        if (stock.memoCarat > 0 && stock.availableCarat === 0) {
+                            stock.status = CONSTANT.STOCK_STATUS.ON_MEMO;
+                        } else if (stock.memoCarat === 0 && stock.availableCarat === 0 && stock.soldCarat > 0) {
+                            stock.status = CONSTANT.STOCK_STATUS.SOLD;
+                        } else {
+                            stock.status = CONSTANT.STOCK_STATUS.AVAILABLE
+                        }
+                    }
+                    // console.log("Update With Stock Element : ", stock);
+
+                    await update({
+                        model: 'Stock',
+                        query: { _id: stock._id },
+                        updateData: {
+                            $set: {
+                                availableCarat: stock.availableCarat,
+                                memoCarat: stock.memoCarat,
+                                status: stock.status
+                            }
+                        }
+                    });
+                }
+
                 await create({
                     model: 'MemoItem',
                     data: {
@@ -376,15 +486,39 @@ const edit = async (req, res) => {
             if (memoItemDetail !== null && memoItemDetail.stockId !== null) {
                 const stock = await findOne({
                     model: 'Stock',
-                    query: { _id: memoItemDetail.stockId }
+                    query: { _id: memoItemDetail.stockId },
+                    projection: { _id: 1, refNo: 1, carat: 1, availableCarat: 1, memoCarat: 1, soldCarat: 1 }
                 });
+                // console.log("Removed Stock Find : ", stock);
 
                 if (stock) {
-                    stock.availableCarat = parseFloat((stock.availableCarat + memoItemDetail.carat).toFixed(2));
-                    stock.memoCarat = parseFloat((stock.memoCarat - memoItemDetail.carat).toFixed(2));
-                    stock.status = stock.status !== CONSTANT.STOCK_STATUS.AVAILABLE ? CONSTANT.STOCK_STATUS.AVAILABLE : stock.status;
+                    stock.availableCarat = Number((stock.availableCarat + Number(memoItemDetail.carat)).toFixed(2));
+                    stock.memoCarat = Number((stock.memoCarat - Number(memoItemDetail.carat)).toFixed(2));
+
+                    if (stock.memoCarat > 0 && stock.availableCarat === 0) {
+                        stock.status = CONSTANT.STOCK_STATUS.ON_MEMO;
+                    } else if (stock.memoCarat === 0 && stock.availableCarat === 0 && stock.soldCarat > 0) {
+                        stock.status = CONSTANT.STOCK_STATUS.SOLD;
+                    } else {
+                        stock.status = CONSTANT.STOCK_STATUS.AVAILABLE
+                    }
                 }
+                // console.log(stock);
+
+                await update({
+                    model: 'Stock',
+                    query: { _id: stock._id },
+                    updateData: {
+                        $set: {
+                            availableCarat: stock.availableCarat,
+                            memoCarat: stock.memoCarat,
+                            status: stock.status
+                        }
+                    }
+                });
             }
+
+            // console.log("Delete With Stock Element : ", element);
 
             deleteById({ model: 'MemoItem', id: element })
         };
