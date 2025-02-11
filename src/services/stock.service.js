@@ -111,6 +111,16 @@ const history = async (req, res) => {
     try {
         const payload = req.body;
 
+        const stockInfo = await findOne({
+            model: 'Stock',
+            query: { _id: payload.stockId, isDeleted: false },
+            projection: { _id: 1, diamondName: 1, refNo: 1, carat: 1, availableCarat: 1, memoCarat: 1, soldCarat: 1 }
+        });
+
+        if (!stockInfo) {
+            return errorResponse(res, null, 'Not Found', 'Stock not exists at this moment.', 404);
+        }
+
         const memoItems = await find({
             model: 'MemoItem',
             query: { stockId: payload.stockId },
@@ -141,23 +151,23 @@ const history = async (req, res) => {
 
         const historyData = sortedData.map(item => {
             const newItem = { ...item._doc };
-        
+
             newItem.activityId = item.invoiceId ? item.invoiceId._id : item.memoId._id;
             newItem.id = item.invoiceId ? item.invoiceId.invoiceNumber : item.memoId.memoNumber;
             newItem.activity = item.invoiceId ? 'Sold' : 'On Memo';
-        
+
             delete newItem.memoId;
             delete newItem.invoiceId;
-        
+
             return newItem;
         });
-        
+
 
         if (!historyData) {
             return errorResponse(res, null, 'Not Found', 'Stock history not exists at this moment.', 404);
         }
 
-        return historyData;
+        return { ...stockInfo._doc, historyData };
     } catch (error) {
         return errorResponse(res, error, error.stack, 'Internal server error.', 500);
     }

@@ -85,7 +85,7 @@ const creation = async (req, res) => {
 
         const customerVerification = await findOne({
             model: 'Customer',
-            query: { _id: payload.customer, }
+            query: { _id: payload.customer }
         });
 
         if (!customerVerification) {
