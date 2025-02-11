@@ -14,13 +14,25 @@ const allCustomer = async (req, res) => {
     }
 };
 
-const fetchStock = async (req, res) => {
+const fetchStockList = async (req, res) => {
     try {
         const stock = await invoiceService.fetch(req, res);
 
         if (!stock) return;
 
         return successResponse(res, stock, 'Stock fetched successfully.', 200);
+    } catch (error) {
+        return errorResponse(res, error, error.stack, 'Internal server error.', 500);
+    }
+};
+
+const fetchInvoiceNumber = async (req, res) => {
+    try {
+        const invoiceNumber = await invoiceService.fetchNext(req, res);
+
+        if (!invoiceNumber) return;
+
+        return successResponse(res, invoiceNumber, 'Next Invoice Number fetched successfully.', 200);
     } catch (error) {
         return errorResponse(res, error, error.stack, 'Internal server error.', 500);
     }
@@ -124,7 +136,8 @@ const sendInvoiceMail = async (req, res) => {
 
 module.exports = {
     allCustomer,
-    fetchStock,
+    fetchStockList,
+    fetchInvoiceNumber,
     createInvoice,
     invoiceDetail,
     invoiceDelete,

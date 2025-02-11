@@ -1,36 +1,32 @@
 const Joi = require('joi');
 
-const fetchStockSchema = Joi.object({
-  refNo: Joi.string().allow("").required()
-});
-
 const invoiceItemSchema = Joi.object({
+  _id: Joi.string().optional(),
   refNo: Joi.string().required(),
   description: Joi.string().allow(''),
-  carats: Joi.string().required(),
+  carat: Joi.string().required(),
   pricePerCarat: Joi.string().required(),
-  returnInCarats: Joi.string().allow(''),
-  soldInCarats: Joi.string().allow(''),
   price: Joi.string().required(),
   remarks: Joi.string().allow('')
 });
 
 const existingItemSchema = Joi.object({
-  _id: Joi.string().required(),
+  _id: Joi.string().optional(),
+  stockId: Joi.string().allow(null),
   refNo: Joi.string().required(),
   description: Joi.string().allow(''),
-  carats: Joi.string().required(),
+  carat: Joi.string().required(),
   pricePerCarat: Joi.string().required(),
-  returnInCarats: Joi.string().allow(''),
-  soldInCarats: Joi.string().allow(''),
   price: Joi.string().required(),
   remarks: Joi.string().allow('')
 });
 
 const createInvoiceSchema = Joi.object({
+  invoiceNumber: Joi.string().required(),
   customer: Joi.string().required(),
   address: Joi.string().required(),
   shipTo: Joi.string().required(),
+  shippingCharge: Joi.string().allow(''),
   terms: Joi.string().required(),
   items: Joi.array().items(invoiceItemSchema).min(1).required()
 });
@@ -44,10 +40,10 @@ const invoiceUpdateSchema = Joi.object({
   customer: Joi.string().required(),
   address: Joi.string().required(),
   shipTo: Joi.string().required(),
+  shippingCharge: Joi.string().allow(''),
   terms: Joi.string().required(),
-  newItems: Joi.array().items(invoiceItemSchema).allow(),
+  items: Joi.array().items(existingItemSchema).min(1).required(),
   removedItems: Joi.array().items(Joi.string()).allow(),
-  updatedItems: Joi.array().items(existingItemSchema).allow()
 });
 
 const allInvoiceSchema = Joi.object({
@@ -67,7 +63,6 @@ const downloadInvoiceSchema = Joi.object({
 });
 
 module.exports = {
-  fetchStockSchema,
   createInvoiceSchema,
   invoiceDetailSchema,
   invoiceUpdateSchema,

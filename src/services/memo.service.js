@@ -8,7 +8,7 @@ const list = async (req, res) => {
             model: 'Customer',
             query: {
                 userType: CONSTANT.CUSTOMER.CUSTOMER,
-                isDeleted: false
+
             },
             projection: { _id: 1, name: 1, phone: 1, address: 1, isDeleted: 1 },
             options: { sort: { name: 1 } }
@@ -85,7 +85,7 @@ const creation = async (req, res) => {
 
         const customerVerification = await findOne({
             model: 'Customer',
-            query: { _id: payload.customer, isDeleted: false }
+            query: { _id: payload.customer, }
         });
 
         if (!customerVerification) {
@@ -187,7 +187,7 @@ const detail = async (req, res) => {
 
         const memoInfo = await findOne({
             model: 'Memo',
-            query: { _id: payload.memoId, isDeleted: false },
+            query: { _id: payload.memoId },
             options: {
                 populate: { path: 'customer', select: '_id name address phone' }
             }
@@ -197,17 +197,12 @@ const detail = async (req, res) => {
             return errorResponse(res, null, 'Not Found', 'Memo not exists at this moment.', 404);
         }
 
-        let memoItems = await find({
+        const memoItems = await find({
             model: 'MemoItem',
             query: { memoId: payload.memoId },
             projection: { memoId: 0, addedBy: 0, createdAt: 0, updatedAt: 0, __v: 0 },
             options: { sort: { _id: 1 } }
         });
-
-        memoItems = memoItems.map(item => ({
-            ...item._doc,
-            carat: item._doc.carat?.toString()
-        }));
 
         return { ...memoInfo._doc, memoItems };
     } catch (error) {
@@ -219,7 +214,7 @@ const deletation = async (req, res) => {
     try {
         const payload = req.body;
 
-        const verifyMemo = await findOne({ model: 'Memo', query: { _id: payload.memoId, isDeleted: false } });
+        const verifyMemo = await findOne({ model: 'Memo', query: { _id: payload.memoId, } });
 
         if (!verifyMemo) {
             return errorResponse(res, null, 'Not Found', 'Memo not exists at this moment.', 404);
@@ -283,14 +278,9 @@ const deletation = async (req, res) => {
             deleteById({ model: 'MemoItem', id: element._id });
         }
 
+        const deleteMemo = await deleteById({ model: 'Memo', id: payload.memoId });
 
-        let updateObj = {};
-        updateObj.isDeleted = true;
-        updateObj.deletedAt = new Date();
-
-        const updateMemo = await update({ model: 'Memo', query: { _id: payload.memoId }, updateData: { $set: updateObj } });
-
-        return updateMemo;
+        return deleteMemo;
     } catch (error) {
         return errorResponse(res, error, error.stack, 'Internal server error.', 500);
     }
@@ -303,7 +293,7 @@ const edit = async (req, res) => {
 
         const memoInfo = await findOne({
             model: 'Memo',
-            query: { _id: payload.memoId, isDeleted: false },
+            query: { _id: payload.memoId },
             options: { populate: { path: 'customer' } }
         });
 
@@ -313,14 +303,16 @@ const edit = async (req, res) => {
 
         const customerVerification = await findOne({
             model: 'Customer',
-            query: { _id: payload.customer, isDeleted: false }
+            query: { _id: payload.customer, }
         });
 
         if (!customerVerification) {
             return errorResponse(res, null, 'Not Found', 'Customer not exists at this moment.', 404);
         }
 
-        const stockIds = payload.items.filter(item => item.stockId).map(item => item.stockId);
+        const stockIds = payload.items
+            .filter(item => (item.stockId && item.stockId !== null) || (!("stockId" in item) && item._id))
+            .map(item => item.stockId || item._id);
 
         const stocks = await find({
             model: 'Stock',
@@ -334,14 +326,27 @@ const edit = async (req, res) => {
         for (let index = 0; index < payload.items.length; index++) {
             const element = payload.items[index];
 
-            if (element.stockId && element.stockId !== null) {
-                const stockValidate = stocks.find(stock => stock._id.toString() === element.stockId.toString());
+            if ((element.stockId !== null && element.stockId !== undefined) || (element.stockId === undefined && element._id)) {
+                const stockValidate = stocks.find(stock =>
+                    (element.stockId !== undefined && element.stockId !== null && stock._id.toString() === element.stockId.toString()) ||
+                    (element.stockId === undefined && element._id && stock._id.toString() === element._id.toString())
+                );
+
+                if (!stockValidate) {
+                    return errorResponse(
+                        res,
+                        null,
+                        'Stock Not Found',
+                        `Stock with Ref No: ${element.refNo} not found in the stocks list.`,
+                        404
+                    );
+                }
 
                 const memoItemDetail = await findOne({
                     model: 'MemoItem',
                     query: {
                         memoId: payload.memoId,
-                        stockId: element.stockId
+                        stockId: element.stockId !== undefined ? element.stockId : element._id
                     }
                 });
 
@@ -414,7 +419,7 @@ const edit = async (req, res) => {
                         updateData: { $set: element }
                     });
                 } else {
-                    // console.log("Update Without Stock Element : ", element);
+                    console.log("Update Without Stock Element : ", element);
 
                     await update({
                         model: 'MemoItem',
@@ -423,8 +428,6 @@ const edit = async (req, res) => {
                     });
                 }
             } else {
-                // console.log("Create New Element : ", element);
-
                 if (element._id) {
                     const stock = await findOne({
                         model: 'Stock',
@@ -459,12 +462,20 @@ const edit = async (req, res) => {
                     });
                 }
 
+                // console.log("Create New Element : ", {
+                //     memoId: payload.memoId,
+                //     stockId: element._id || null,
+                //     manualEntry: element._id !== undefined ? false : true,
+                //     ...element,
+                //     addedBy: loginUser.userId
+                // });
+
                 await create({
                     model: 'MemoItem',
                     data: {
                         memoId: payload.memoId,
-                        stockId: element.stockId,
-                        manualEntry: element.stockId !== null ? false : true,
+                        stockId: element._id || null,
+                        manualEntry: element._id !== undefined ? false : true,
                         ...element,
                         addedBy: loginUser.userId
                     }
@@ -551,12 +562,12 @@ const all = async (req, res) => {
 
         const memoCount = countDocuments({
             model: 'Memo',
-            query: { isDeleted: false }
+            query: {}
         });
 
         const memo = find({
             model: 'Memo',
-            query: { isDeleted: false },
+            query: {},
             options: {
                 skip,
                 limit: payload.limit,

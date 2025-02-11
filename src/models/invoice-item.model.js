@@ -2,9 +2,11 @@ const mongoose = require("mongoose");
 
 const invoiceItemSchema = new mongoose.Schema({
     invoiceId: { type: mongoose.Schema.Types.ObjectId, ref: 'Memo', required: true },
+    stockId: { type: mongoose.Schema.Types.ObjectId, ref: 'Stock', required: false },
+    manualEntry: { type: Boolean, default: false },
     refNo: { type: String, required: true },
     description: { type: String, default: '' },
-    carats: { type: Number, required: true },
+    carat: { type: Number, required: true },
     pricePerCarat: { type: String, required: true },
     price: { type: String, required: true },
     addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }

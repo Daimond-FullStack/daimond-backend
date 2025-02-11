@@ -20,12 +20,19 @@ router.get(
 );
 
 // Find RefNo Throw Stock route
-router.post(
-    '/fetch-stock',
+router.get(
+    '/fetch-stock-list',
     authMiddleware,
-    validateRequest(invoiceValidator.fetchStockSchema),
     allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
-    invoiceController.fetchStock
+    invoiceController.fetchStockList
+);
+
+// Fetch Next Invoice Number route
+router.get(
+    '/fetch-invoice-number',
+    authMiddleware,
+    allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
+    invoiceController.fetchInvoiceNumber
 );
 
 // Invoice create route

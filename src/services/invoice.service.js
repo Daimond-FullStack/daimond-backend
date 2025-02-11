@@ -24,16 +24,13 @@ const list = async (req, res) => {
 
 const fetch = async (req, res) => {
     try {
-        const payload = req.body;
-
-        const response = await findOne({
+        const response = await find({
             model: 'Stock',
             query: {
-                refNo: payload.refNo,
                 isDeleted: false,
                 status: CONSTANT.STOCK_STATUS.AVAILABLE
             },
-            projection: { _id: 1, refNo: 1, carat: 1, pricePerCarat: 1, price: 1 }
+            projection: { _id: 1, diamondName: 1, refNo: 1, carat: '$availableCarat', pricePerCarat: 1, price: 1, remarks: 1, }
         });
 
         if (!response) {
@@ -46,34 +43,38 @@ const fetch = async (req, res) => {
     }
 };
 
-const getNextInvoiceNumber = async () => {
-    const lastMemo = await findOne({
-        model: 'Invoice',
-        query: {},
-        options: { sort: { invoiceNumber: -1 } }
-    });
+const fetchNext = async (req, res) => {
+    try {
+        const lastMemo = await findOne({
+            model: 'Invoice',
+            query: {},
+            options: { sort: { invoiceNumber: -1 } }
+        });
 
-    let nextInvoiceNumber = "INV-00001";
+        let nextInvoiceNumber = "INV-00001";
 
-    if (lastMemo) {
-        const lastInvoiceNumber = lastMemo.invoiceNumber;
-        const lastNumber = parseInt(lastInvoiceNumber.replace('INV-', ''), 10);
+        if (lastMemo) {
+            const lastInvoiceNumber = lastMemo.invoiceNumber;
+            const lastNumber = parseInt(lastInvoiceNumber.replace('INV-', ''), 10);
 
-        const nextNumber = lastNumber + 1;
+            const nextNumber = lastNumber + 1;
 
-        nextInvoiceNumber = `INV-${nextNumber.toString().padStart(5, '0')}`;
+            nextInvoiceNumber = `INV-${nextNumber.toString().padStart(5, '0')}`;
+        }
+
+        const validMemoNo = await findOne({
+            model: 'Invoice',
+            query: { invoiceNumber: nextInvoiceNumber }
+        });
+
+        if (validMemoNo) {
+            return getNextMemoNumber();
+        }
+
+        return nextInvoiceNumber;
+    } catch (error) {
+        return errorResponse(res, error, error.stack, 'Internal server error.', 500);
     }
-
-    const validMemoNo = await findOne({
-        model: 'Invoice',
-        query: { invoiceNumber: nextInvoiceNumber }
-    });
-
-    if (validMemoNo) {
-        return getNextMemoNumber();
-    }
-
-    return nextInvoiceNumber;
 }
 
 function getColumnTotal(data, columnKey) {
@@ -103,24 +104,41 @@ const creation = async (req, res) => {
             return errorResponse(res, null, 'Not Found', 'Customer not exists at this moment.', 404);
         }
 
-        // const itemsRefNo = payload.items?.map(item => item?.refNo)
-        // const stockVerification = await find({
-        //     model: 'Stock',
-        //     query: { refNo: { $in: itemsRefNo }, status: { $ne: CONSTANT.STOCK_STATUS.AVAILABLE }, isDeleted: false }
-        // });
+        const stockIds = payload.items.filter(item => item._id).map(item => item._id);
 
-        // if (stockVerification.length) {
-        //     return errorResponse(res, null, 'Not Found', 'One or more items are not available in stock.', 404);
-        // }
+        const stocks = await find({
+            model: 'Stock',
+            query: { _id: { $in: stockIds } },
+            projection: { _id: 1, refNo: 1, carat: 1, availableCarat: 1, memoCarat: 1, soldCarat: 1 }
+        });
+
+        for (let index = 0; index < payload.items.length; index++) {
+            const element = payload.items[index];
+
+            if (element._id) {
+                const stock = stocks.find(stock => stock._id.toString() === element._id.toString());
+
+                if (stock.availableCarat < Number(element.carat)) {
+                    return errorResponse(
+                        res,
+                        null,
+                        'Insufficient Stock',
+                        `Stock with Ref No: ${stock.refNo} has available carat ${stock.availableCarat}, which is less than the requested carat ${element.carat}.`,
+                        400
+                    );
+                }
+            }
+        }
 
         const createInvoice = await create({
             model: 'Invoice',
             data: {
                 customer: payload.customer,
                 billTo: payload.billTo,
-                invoiceNumber: await getNextInvoiceNumber(),
+                invoiceNumber: payload.invoiceNumber,
                 address: payload.address,
                 shipTo: payload.shipTo,
+                shippingCharge: payload.shippingCharge,
                 terms: payload.terms,
                 dueDate: setDueDate(payload.terms),
                 numberOfItems: payload.items?.length,
@@ -131,17 +149,44 @@ const creation = async (req, res) => {
 
         for (let index = 0; index < payload.items.length; index++) {
             const element = payload.items[index];
+            const stockId = element._id || null;
+            delete element._id;
 
-            await update({
-                model: 'Stock',
-                query: { refNo: element.refNo },
-                updateData: { $set: { status: CONSTANT.STOCK_STATUS.ON_MEMO } }
-            });
+            if (stockId !== null) {
+                const stock = stocks.find(stock => stock._id.toString() === stockId.toString());
+
+                stock.availableCarat = Number((stock.availableCarat - Number(element.carat)).toFixed(2));
+                stock.soldCarat = Number((stock.soldCarat + Number(element.carat)).toFixed(2));
+
+                if (stock.availableCarat === 0) {
+                    if (stock.soldCarat > 0 && stock.availableCarat === 0) {
+                        stock.status = CONSTANT.STOCK_STATUS.ON_MEMO;
+                    } else if (stock.soldCarat === 0 && stock.availableCarat === 0 && stock.soldCarat > 0) {
+                        stock.status = CONSTANT.STOCK_STATUS.SOLD;
+                    } else {
+                        stock.status = CONSTANT.STOCK_STATUS.AVAILABLE
+                    }
+                }
+
+                await update({
+                    model: 'Stock',
+                    query: { _id: stock._id },
+                    updateData: {
+                        $set: {
+                            availableCarat: stock.availableCarat,
+                            soldCarat: stock.soldCarat,
+                            status: stock.status
+                        }
+                    }
+                });
+            }
 
             await create({
                 model: 'InvoiceItem',
                 data: {
                     invoiceId: createInvoice._id,
+                    stockId: stockId,
+                    manualEntry: stockId !== null ? false : true,
                     ...element,
                     addedBy: loginUser.userId
                 }
@@ -160,7 +205,7 @@ const detail = async (req, res) => {
 
         const invoiceInfo = await findOne({
             model: 'Invoice',
-            query: { _id: payload.sellInvoiceId, isDeleted: false },
+            query: { _id: payload.sellInvoiceId },
             options: {
                 populate: { path: 'customer', select: '_id name address' }
             }
@@ -187,19 +232,73 @@ const deletation = async (req, res) => {
     try {
         const payload = req.body;
 
-        const verifyInvoice = await findOne({ model: 'Invoice', query: { _id: payload.sellInvoiceId, isDeleted: false } });
+        const verifyInvoice = await findOne({ model: 'Invoice', query: { _id: payload.sellInvoiceId } });
 
         if (!verifyInvoice) {
             return errorResponse(res, null, 'Not Found', 'Invoice not exists at this moment.', 404);
         }
 
-        let updateObj = {};
-        updateObj.isDeleted = true;
-        updateObj.deletedAt = new Date();
+        const invoiceItems = await find({
+            model: 'InvoiceItem',
+            query: { invoiceId: payload.sellInvoiceId },
+            projection: { invoiceId: 0, addedBy: 0, createdAt: 0, updatedAt: 0, __v: 0 },
+            options: { sort: { _id: 1 } }
+        });
 
-        const updateInvoice = await update({ model: 'Invoice', query: { _id: payload.sellInvoiceId }, updateData: { $set: updateObj } });
+        const stockIds = invoiceItems.filter(item => item.stockId).map(item => item.stockId);
 
-        return updateInvoice;
+        const stocks = await find({
+            model: 'Stock',
+            query: { _id: { $in: stockIds } },
+            projection: { _id: 1, refNo: 1, carat: 1, availableCarat: 1, memoCarat: 1, soldCarat: 1 }
+        });
+
+        for (let index = 0; index < invoiceItems.length; index++) {
+            const element = invoiceItems[index];
+
+            const memoItemDetail = await findOne({
+                model: 'InvoiceItem',
+                query: {
+                    memoId: payload.memoId,
+                    _id: element._id
+                }
+            });
+
+            if (element.stockId !== null) {
+                const stock = stocks.find(stock => stock._id.toString() === element.stockId.toString());
+
+                if (stock) {
+                    stock.availableCarat = Number((stock.availableCarat + Number(memoItemDetail.carat)).toFixed(2));
+                    stock.soldCarat = Number((stock.soldCarat - Number(memoItemDetail.carat)).toFixed(2));
+
+                    if (stock.memoCarat > 0 && stock.availableCarat === 0) {
+                        stock.status = CONSTANT.STOCK_STATUS.ON_MEMO;
+                    } else if (stock.memoCarat === 0 && stock.availableCarat === 0 && stock.soldCarat > 0) {
+                        stock.status = CONSTANT.STOCK_STATUS.SOLD;
+                    } else {
+                        stock.status = CONSTANT.STOCK_STATUS.AVAILABLE
+                    }
+                }
+
+                await update({
+                    model: 'Stock',
+                    query: { _id: stock._id },
+                    updateData: {
+                        $set: {
+                            availableCarat: stock.availableCarat,
+                            soldCarat: stock.soldCarat,
+                            status: stock.status
+                        }
+                    }
+                });
+            }
+
+            await deleteById({ model: 'InvoiceItem', id: element._id });
+        }
+
+        const deleteInvoice = await deleteById({ model: 'Invoice', id: payload.sellInvoiceId });
+
+        return deleteInvoice;
     } catch (error) {
         return errorResponse(res, error, error.stack, 'Internal server error.', 500);
     }
@@ -212,7 +311,7 @@ const edit = async (req, res) => {
 
         const invoiceInfo = await findOne({
             model: 'Invoice',
-            query: { _id: payload.sellInvoiceId, isDeleted: false },
+            query: { _id: payload.sellInvoiceId },
             options: { populate: { path: 'customer', select: '_id name address' } }
         });
 
@@ -229,63 +328,232 @@ const edit = async (req, res) => {
             return errorResponse(res, null, 'Not Found', 'Customer not exists at this moment.', 404);
         }
 
-        // if (payload.newItems.length > 0) {
-        //     const itemsRefNo = payload.newItems.map(item => item?.refNo);
-        //     const availableStock = await find({
-        //         model: 'Stock',
-        //         query: {
-        //             refNo: { $in: itemsRefNo },
-        //             status: { $ne: CONSTANT.STOCK_STATUS.AVAILABLE },
-        //             isDeleted: false
-        //         }
-        //     });
+        const stockIds = payload.items
+            .filter(item => (item.stockId && item.stockId !== null) || (!("stockId" in item) && item._id))
+            .map(item => item.stockId || item._id);
 
-        //     if (availableStock.length) {
-        //         return errorResponse(res, null, 'Not Found', 'One or more items are not available in stock.', 404);
-        //     }
-        // }
+        const stocks = await find({
+            model: 'Stock',
+            query: { _id: { $in: stockIds } },
+            projection: { _id: 1, refNo: 1, carat: 1, availableCarat: 1, memoCarat: 1, soldCarat: 1 }
+        });
 
-        const newItemsPromises = payload.newItems.map(async item => {
-            await update({
-                model: 'Stock',
-                query: { refNo: item.refNo },
-                updateData: { $set: { status: CONSTANT.STOCK_STATUS.ON_MEMO } }
-            });
+        // Clone stock data to avoid mutation issues
+        const stocksCopy = JSON.parse(JSON.stringify(stocks));
 
-            return create({
+        for (let index = 0; index < payload.items.length; index++) {
+            const element = payload.items[index];
+
+            if ((element.stockId !== null && element.stockId !== undefined) || (element.stockId === undefined && element._id)) {
+                const stockValidate = stocks.find(stock =>
+                    (element.stockId !== undefined && element.stockId !== null && stock._id.toString() === element.stockId.toString()) ||
+                    (element.stockId === undefined && element._id && stock._id.toString() === element._id.toString())
+                );
+
+                if (!stockValidate) {
+                    return errorResponse(
+                        res,
+                        null,
+                        'Stock Not Found',
+                        `Stock with Ref No: ${element.refNo} not found in the stocks list.`,
+                        404
+                    );
+                }
+
+                const invoiceItemDetail = await findOne({
+                    model: 'InvoiceItem',
+                    query: {
+                        invoiceId: payload.sellInvoiceId,
+                        stockId: element.stockId !== undefined ? element.stockId : element._id
+                    }
+                });
+
+                if (invoiceItemDetail !== null) {
+                    stockValidate.availableCarat = Number((stockValidate.availableCarat + Number(invoiceItemDetail.carat)).toFixed(2));
+                }
+
+                if (stockValidate.availableCarat < Number(element.carat)) {
+                    return errorResponse(
+                        res,
+                        null,
+                        'Insufficient Stock',
+                        `Stock with Ref No: ${stockValidate.refNo} has available carat ${stockValidate.availableCarat}, which is less than the requested carat ${element.carat}.`,
+                        400
+                    );
+                }
+            }
+        }
+
+        for (let index = 0; index < payload.items.length; index++) {
+            const element = payload.items[index];
+
+            const invoiceItemDetail = await findOne({
                 model: 'InvoiceItem',
-                data: {
-                    invoiceId: invoiceInfo._id,
-                    ...item,
-                    addedBy: loginUser.userId
+                query: {
+                    _id: element._id,
+                    memoId: payload.memoId,
+                    stockId: element.stockId
                 }
             });
-        });
 
-        const removedItemsPromises = payload.removedItems.map(id =>
-            deleteById({ model: 'InvoiceItem', id })
-        );
+            if (invoiceItemDetail !== null) {
+                delete element._id;
 
-        const updatedItemsPromises = payload.updatedItems.map(item =>
-            update({
+                if (element.stockId !== null) {
+                    const stock = stocksCopy.find(stock => stock._id.toString() === element.stockId.toString());
+                    // console.log("Find Stock : ", stock);
+
+                    if (invoiceItemDetail !== null) {
+                        stock.availableCarat = Number(((stock.availableCarat + Number(invoiceItemDetail.carat)) - Number(element.carat)).toFixed(2));
+                        stock.soldCarat = Number(((stock.soldCarat - Number(invoiceItemDetail.carat)) + Number(element.carat)).toFixed(2));
+                    }
+
+                    if (stock.memoCarat > 0 && stock.availableCarat === 0) {
+                        stock.status = CONSTANT.STOCK_STATUS.ON_MEMO;
+                    } else if (stock.memoCarat === 0 && stock.availableCarat === 0 && stock.soldCarat > 0) {
+                        stock.status = CONSTANT.STOCK_STATUS.SOLD;
+                    } else {
+                        stock.status = CONSTANT.STOCK_STATUS.AVAILABLE
+                    }
+                    // console.log("Update Stock : ", stock);
+
+                    // console.log("Update With Stock Element : ", element);
+
+                    await update({
+                        model: 'Stock',
+                        query: { _id: stock._id },
+                        updateData: {
+                            $set: {
+                                availableCarat: stock.availableCarat,
+                                soldCarat: stock.soldCarat,
+                                status: stock.status
+                            }
+                        }
+                    });
+
+                    await update({
+                        model: 'InvoiceItem',
+                        query: { _id: invoiceItemDetail._id },
+                        updateData: { $set: element }
+                    });
+                } else {
+                    // console.log("Update Without Stock Element : ", element);
+
+                    await update({
+                        model: 'InvoiceItem',
+                        query: { _id: invoiceItemDetail._id },
+                        updateData: { $set: element }
+                    });
+                }
+            } else {
+                if (element._id) {
+                    const stock = await findOne({
+                        model: 'Stock',
+                        query: { _id: element._id },
+                        projection: { _id: 1, refNo: 1, carat: 1, availableCarat: 1, memoCarat: 1, soldCarat: 1 }
+                    });
+
+                    if (stock) {
+                        stock.availableCarat = Number((stock.availableCarat - Number(element.carat)).toFixed(2));
+                        stock.soldCarat = Number((stock.soldCarat + Number(element.carat)).toFixed(2));
+
+                        if (stock.memoCarat > 0 && stock.availableCarat === 0) {
+                            stock.status = CONSTANT.STOCK_STATUS.ON_MEMO;
+                        } else if (stock.memoCarat === 0 && stock.availableCarat === 0 && stock.soldCarat > 0) {
+                            stock.status = CONSTANT.STOCK_STATUS.SOLD;
+                        } else {
+                            stock.status = CONSTANT.STOCK_STATUS.AVAILABLE
+                        }
+                    }
+                    // console.log("Update With Stock Element : ", stock);
+
+                    await update({
+                        model: 'Stock',
+                        query: { _id: stock._id },
+                        updateData: {
+                            $set: {
+                                availableCarat: stock.availableCarat,
+                                soldCarat: stock.soldCarat,
+                                status: stock.status
+                            }
+                        }
+                    });
+                }
+
+                const stockId = element._id || null;
+                delete element._id;
+
+                // console.log("Create New Element : ", {
+                //     invoiceId: payload.sellInvoiceId,
+                //     stockId: stockId,
+                //     manualEntry: stockId !== null ? false : true,
+                //     ...element,
+                //     addedBy: loginUser.userId
+                // });
+
+                await create({
+                    model: 'InvoiceItem',
+                    data: {
+                        invoiceId: payload.sellInvoiceId,
+                        stockId: stockId,
+                        manualEntry: stockId !== null ? false : true,
+                        ...element,
+                        addedBy: loginUser.userId
+                    }
+                });
+            }
+        }
+
+        for (let index = 0; index < payload.removedItems.length; index++) {
+            const element = payload.removedItems[index];
+
+            const memoItemDetail = await findOne({
                 model: 'InvoiceItem',
-                query: { _id: item._id },
-                updateData: { $set: item }
-            })
-        );
+                query: {
+                    invoiceId: payload.sellInvoiceId,
+                    _id: element
+                }
+            });
 
-        // Execute all promises
-        await Promise.all([
-            ...newItemsPromises,
-            ...removedItemsPromises,
-            ...updatedItemsPromises
-        ]);
+            if (memoItemDetail !== null && memoItemDetail.stockId !== null) {
+                const stock = await findOne({
+                    model: 'Stock',
+                    query: { _id: memoItemDetail.stockId },
+                    projection: { _id: 1, refNo: 1, carat: 1, availableCarat: 1, memoCarat: 1, soldCarat: 1 }
+                });
+                // console.log("Removed Stock Find : ", stock);
 
-        const invoiceItems = await find({
-            model: 'InvoiceItem',
-            query: { invoiceId: invoiceInfo._id },
-            projection: { _id: 1, price: 1, carats: 1 }
-        });
+                if (stock) {
+                    stock.availableCarat = Number((stock.availableCarat + Number(memoItemDetail.carat)).toFixed(2));
+                    stock.soldCarat = Number((stock.soldCarat - Number(memoItemDetail.carat)).toFixed(2));
+
+                    if (stock.memoCarat > 0 && stock.availableCarat === 0) {
+                        stock.status = CONSTANT.STOCK_STATUS.ON_MEMO;
+                    } else if (stock.memoCarat === 0 && stock.availableCarat === 0 && stock.soldCarat > 0) {
+                        stock.status = CONSTANT.STOCK_STATUS.SOLD;
+                    } else {
+                        stock.status = CONSTANT.STOCK_STATUS.AVAILABLE
+                    }
+                }
+                // console.log(stock);
+
+                await update({
+                    model: 'Stock',
+                    query: { _id: stock._id },
+                    updateData: {
+                        $set: {
+                            availableCarat: stock.availableCarat,
+                            soldCarat: stock.soldCarat,
+                            status: stock.status
+                        }
+                    }
+                });
+            }
+
+            // console.log("Delete With Stock Element : ", element);
+
+            deleteById({ model: 'InvoiceItem', id: element })
+        };
 
         const updateInvoice = await update({
             model: 'Invoice',
@@ -295,9 +563,10 @@ const edit = async (req, res) => {
                     address: payload.address,
                     shipTo: payload.shipTo,
                     terms: payload.terms,
+                    shippingCharge: payload.shippingCharge,
                     dueDate: setDueDate(payload.terms),
-                    numberOfItems: invoiceItems.length,
-                    totalValue: getColumnTotal(invoiceItems, 'price')
+                    numberOfItems: payload.items.length,
+                    totalValue: getColumnTotal(payload.items, 'price')
                 }
             }
         });
@@ -320,7 +589,6 @@ const all = async (req, res) => {
         const invoiceCount = countDocuments({
             model: 'Invoice',
             query: {
-                isDeleted: false,
                 $or: [
                     { invoiceNumber: { $regex: payload.search, $options: 'i' } },
                 ]
@@ -330,7 +598,6 @@ const all = async (req, res) => {
         const invoice = find({
             model: 'Invoice',
             query: {
-                isDeleted: false,
                 $or: [
                     { invoiceNumber: { $regex: payload.search, $options: 'i' } },
                 ]
@@ -440,6 +707,7 @@ const download = async (req, res) => {
 module.exports = {
     list,
     fetch,
+    fetchNext,
     creation,
     detail,
     deletation,
