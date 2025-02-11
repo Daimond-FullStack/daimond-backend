@@ -107,6 +107,62 @@ const detail = async (req, res) => {
     }
 };
 
+const history = async (req, res) => {
+    try {
+        const payload = req.body;
+
+        const memoItems = await find({
+            model: 'MemoItem',
+            query: { stockId: payload.stockId },
+            projection: { memoId: 1, addedBy: 1, carat: 1, createdAt: 1 },
+            options: {
+                populate: [
+                    { path: 'addedBy', select: 'fullName userType profilePic' },
+                    { path: 'memoId', select: 'memoNumber' }
+                ]
+            }
+        });
+
+        const invoiceItems = await find({
+            model: 'InvoiceItem',
+            query: { stockId: payload.stockId },
+            projection: { invoiceId: 1, addedBy: 1, carat: 1, createdAt: 1 },
+            options: {
+                populate: [
+                    { path: 'addedBy', select: 'fullName userType profilePic' },
+                    { path: 'invoiceId', select: 'invoiceNumber' }
+                ]
+            }
+        });
+
+        const mergedData = [...memoItems, ...invoiceItems];
+
+        const sortedData = mergedData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        const historyData = sortedData.map(item => {
+            const newItem = { ...item._doc };
+        
+            newItem.activityId = item.invoiceId ? item.invoiceId._id : item.memoId._id;
+            newItem.id = item.invoiceId ? item.invoiceId.invoiceNumber : item.memoId.memoNumber;
+            newItem.activity = item.invoiceId ? 'Sold' : 'On Memo';
+        
+            delete newItem.memoId;
+            delete newItem.invoiceId;
+        
+            return newItem;
+        });
+        
+
+        if (!historyData) {
+            return errorResponse(res, null, 'Not Found', 'Stock history not exists at this moment.', 404);
+        }
+
+        return historyData;
+    } catch (error) {
+        return errorResponse(res, error, error.stack, 'Internal server error.', 500);
+    }
+};
+
 const deletation = async (req, res) => {
     try {
         const payload = req.body;
@@ -138,12 +194,6 @@ const edit = async (req, res) => {
         if (!verifyStock) {
             return errorResponse(res, null, 'Not Found', 'Stock not exists at this moment.', 404);
         }
-
-        // if (verifyStock.vendor?.toString() !== payload.vendor.value) {
-        //     payload.diamondId = generateProfessionalDiamondID(payload.vendor.label);
-        //     payload.vendor = payload.vendor.value;
-        // }
-        // delete payload.vendor;
 
         const updateStock = await update({ model: 'Stock', query: { _id: payload.stockId }, updateData: { $set: payload } });
 
@@ -416,6 +466,7 @@ module.exports = {
     remove,
     addNew,
     detail,
+    history,
     deletation,
     edit,
     all,

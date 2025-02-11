@@ -633,7 +633,7 @@ const status = async (req, res) => {
     try {
         const payload = req.body;
 
-        const verifyInvoice = await findOne({ model: 'Invoice', query: { _id: payload.sellInvoiceId, isDeleted: false } });
+        const verifyInvoice = await findOne({ model: 'Invoice', query: { _id: payload.sellInvoiceId } });
 
         if (!verifyInvoice) {
             return errorResponse(res, null, 'Not Found', 'Invoice not exists at this moment.', 404);
@@ -655,7 +655,7 @@ const download = async (req, res) => {
 
         const invoiceInfo = await findOne({
             model: 'Invoice',
-            query: { _id: payload.sellInvoiceId, isDeleted: false },
+            query: { _id: payload.sellInvoiceId },
             options: {
                 populate: { path: 'customer', select: '_id name address phone' }
             }

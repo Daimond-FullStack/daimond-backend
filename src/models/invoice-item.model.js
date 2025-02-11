@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const invoiceItemSchema = new mongoose.Schema({
-    invoiceId: { type: mongoose.Schema.Types.ObjectId, ref: 'Memo', required: true },
+    invoiceId: { type: mongoose.Schema.Types.ObjectId, ref: 'Invoice', required: true },
     stockId: { type: mongoose.Schema.Types.ObjectId, ref: 'Stock', required: false },
     manualEntry: { type: Boolean, default: false },
     refNo: { type: String, required: true },

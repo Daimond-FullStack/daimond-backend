@@ -85,6 +85,10 @@ const stockDetailSchema = Joi.object({
     stockId: Joi.string().required()
 });
 
+const stockHistorySchema = Joi.object({
+    stockId: Joi.string().required()
+});
+
 const updateStockDetailSchema = Joi.object({
     stockId: Joi.string().required(),
     type: Joi.string().valid(...Object.values(CONSTANT.STOCK_TYPE)).required(),
@@ -174,6 +178,7 @@ module.exports = {
     removeImageSchema,
     addNewStockSchema,
     stockDetailSchema,
+    stockHistorySchema,
     updateStockDetailSchema,
     allStocksSchema
 };

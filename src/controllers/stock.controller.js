@@ -62,6 +62,18 @@ const stockDetail = async (req, res) => {
     }
 };
 
+const stockHistory = async (req, res) => {
+    try {
+        const stock = await stockService.history(req, res);
+
+        if (!stock) return;
+
+        return successResponse(res, stock, 'Stock history fetched successfully.', 200);
+    } catch (error) {
+        return errorResponse(res, error, error.stack, 'Internal server error.', 500);
+    }
+};
+
 const stockDelete = async (req, res) => {
     try {
         const stock = await stockService.deletation(req, res);
@@ -128,6 +140,7 @@ module.exports = {
     removeDaimondImages,
     addNewStock,
     stockDetail,
+    stockHistory,
     stockDelete,
     stockUpdate,
     allStocks,

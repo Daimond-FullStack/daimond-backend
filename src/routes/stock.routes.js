@@ -56,6 +56,15 @@ router.post(
     stockController.stockDetail
 );
 
+// Stock history route
+router.post(
+    '/history',
+    // authMiddleware,
+    validateRequest(stockValidator.stockHistorySchema),
+    // allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
+    stockController.stockHistory
+);
+
 // Stock delete route
 router.post(
     '/delete',
