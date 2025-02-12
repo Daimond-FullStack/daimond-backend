@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const CONSTANT = require("../utils/constant");
 
-const stockSchema = new mongoose.Schema({
+const purchaseSchema = new mongoose.Schema({
     diamondId: { type: String, required: true },
     type: { type: String, enum: Object.values(CONSTANT.STOCK_TYPE), default: CONSTANT.STOCK_TYPE.GIA_STONE },
     diamondName: { type: String, required: true },
@@ -33,20 +33,17 @@ const stockSchema = new mongoose.Schema({
     pricePerCarat: { type: String, required: false },
     price: { type: String, required: false },
     status: { type: String, enum: Object.values(CONSTANT.STOCK_STATUS), default: CONSTANT.STOCK_STATUS.AVAILABLE },
-    availableCarat: { type: Number, default: 0.00 },
-    memoCarat: { type: Number, default: 0.00 },
-    soldCarat: { type: Number, default: 0.00 },
     isDeleted: { type: Boolean, default: false },
     deletedAt: { type: Date, default: null },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false }
 }, { timestamps: true });
 
-stockSchema.index({ diamondId: 1 }, { unique: true });
-stockSchema.index({ diamondName: 1 });
-stockSchema.index({ refNo: 1 }, { unique: true });
-stockSchema.index({ location: 1 });
-stockSchema.index({ status: 1 });
+purchaseSchema.index({ diamondId: 1 }, { unique: true });
+purchaseSchema.index({ diamondName: 1 });
+purchaseSchema.index({ refNo: 1 });
+purchaseSchema.index({ location: 1 });
+purchaseSchema.index({ status: 1 });
 
-const Stock = mongoose.model("Stock", stockSchema);
+const Purchase = mongoose.model("Purchase", purchaseSchema);
 
-module.exports = Stock;
+module.exports = Purchase;

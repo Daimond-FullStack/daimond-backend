@@ -7,6 +7,7 @@ const MemoItem = require('./memo-item.model');
 const Invoice = require('./invoice.model');
 const InvoiceItem = require('./invoice-item.model');
 const Expense = require('./expense.model');
+const Purchase = require('./purchase.model');
 
 module.exports = {
     User,
@@ -17,5 +18,6 @@ module.exports = {
     MemoItem,
     Invoice,
     InvoiceItem,
-    Expense
+    Expense,
+    Purchase
 };

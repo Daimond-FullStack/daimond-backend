@@ -12,14 +12,6 @@ const { upload } = require('../middleware/multer.middleware');
 
 const stockValidator = require('../validations/stock.validation');
 
-// All Vendor List route
-router.get(
-    '/all-vendors',
-    authMiddleware,
-    allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
-    stockController.allVendorsList
-);
-
 // Upload Image route
 router.post(
     '/upload-image',
@@ -59,9 +51,9 @@ router.post(
 // Stock history route
 router.post(
     '/history',
-    // authMiddleware,
+    authMiddleware,
     validateRequest(stockValidator.stockHistorySchema),
-    // allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
+    allowedRoles([CONSTANT.USER_TYPES.ADMIN]),
     stockController.stockHistory
 );
 

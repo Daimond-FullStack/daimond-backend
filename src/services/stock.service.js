@@ -2,30 +2,10 @@ const { deleteLocalFile } = require("../middleware/multer.middleware");
 
 const serverConfig = require("../config");
 
-const { CUSTOMER } = require("../utils/constant");
+const CONSTANT = require("../utils/constant");
 const { errorResponse } = require("../utils/responses");
 const { find, findOne, create, countDocuments, update } = require("../utils/database");
 const { generateProfessionalDiamondID, excelToJson, exportFileFunction, convertToIST, getExcelFileName, excelFileDownload } = require("../utils/helper");
-
-const list = async (req, res) => {
-    try {
-        const vendors = await find({
-            model: 'Customer',
-            query: {
-                userType: CUSTOMER.VENDOR,
-                isDeleted: false
-            },
-            options: {
-                sort: { fullName: 1 },
-                projection: { _id: 1, name: 1, userType: 1, isDeleted: 1 }
-            }
-        });
-
-        return vendors;
-    } catch (error) {
-        return errorResponse(res, error, error.stack, 'Internal server error.', 500);
-    }
-};
 
 const upload = async (req, res) => {
     try {
@@ -471,7 +451,6 @@ const exportExcel = async (req, res) => {
 }
 
 module.exports = {
-    list,
     upload,
     remove,
     addNew,
